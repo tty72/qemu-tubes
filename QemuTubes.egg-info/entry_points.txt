@@ -1,0 +1,5 @@
+      [paste.app_factory]
+      main = qemutubes:main
+      [console_scripts]
+      initialize_QemuTubes_db = qemutubes.scripts.initializedb:main
+      

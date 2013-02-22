@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/" py:strip="">
+
+  <py:match path="head" once="true">
+    <head py:attrs="select('@*')">
+      <title py:with="title = list(select('title/text()'))">
+        Tubes<py:if test="title">: ${title}</py:if>
+      </title>
+      <link rel="stylesheet" href="/css/layout.css" type="text/css" />
+    </head>
+  </py:match>
+
+  <py:match path="body" once="true">
+    <body py:attrs="select('@*')"><div id="wrap">
+      <div id="header">
+      
+      </div>
+      <div id="content">
+        ${select('*|text()')}
+      </div>
+      <div id="footer">
+        <hr />
+        <p class="legalese">© 2013 Autumn Attic</p>
+      </div>
+    </div></body>
+  </py:match>
+
+</html>

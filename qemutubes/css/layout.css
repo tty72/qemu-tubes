@@ -1,0 +1,9 @@
+div#content {
+    width: 100%;
+    text-align: center;
+}
+
+.ui-jqgrid {
+    margin-left: auto;
+    margin-right: auto;
+}

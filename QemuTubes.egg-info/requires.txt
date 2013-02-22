@@ -1,0 +1,13 @@
+pyramid
+SQLAlchemy
+transaction
+pyramid_tm
+pyramid_debugtoolbar
+zope.sqlalchemy
+waitress
+pyramid_genshi
+tw2.core
+tw2.forms
+tw2.dynforms
+tw2.sqla
+tw2.jqplugins.jqgrid
