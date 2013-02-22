@@ -3,6 +3,14 @@ import tw2.forms
 import tw2.sqla
 import tw2.jqplugins.jqgrid
 import qemutubes.models as model
+import sqlalchemy as sa
+
+class DBForm(object):
+    def fetch_data(self, req):
+        data = req.GET.mixed()
+        filter = dict((col.name, data.get(col.name))
+                        for col in sa.orm.class_mapper(self.entity).primary_key)
+        self.value = req.GET and self.entity.query.filter_by(**filter).first() or None
 
 class MachineGrid(tw2.jqplugins.jqgrid.SQLAjqGridWidget):
     id = 'machine_grid'
@@ -87,22 +95,24 @@ class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
 
 
 
-class MachineForm(tw2.sqla.DbFormPage):
-    title = 'Machine'
-    entity = model.Machine
-    redirect = '/'
+#class MachineForm(tw2.sqla.DbFormPage):
+#    title = 'Machine'
+#    entity = model.Machine
+#    redirect = '/'
 
-    class child(tw2.forms.TableForm):
-        id = tw2.forms.HiddenField()
-        name = tw2.forms.TextField(validator=tw2.core.Required)
-        mem = tw2.forms.TextField()
-        vncport = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        conport = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        netnone = tw2.forms.CheckBox()
-        cpu = tw2.sqla.DbSingleSelectField(entity=model.CPUType)
-        machtype = tw2.sqla.DbSingleSelectField(entity=model.MachineType)
-        #FIXME: Pull prefix for action URL from config controller_prefix
-        action = '/tw2_controllers/machine_submit' 
+class MachineForm(tw2.forms.TableForm, DBForm):
+    id = tw2.forms.HiddenField()
+    entity = model.Machine
+    name = tw2.forms.TextField(validator=tw2.core.Required)
+    mem = tw2.forms.TextField()
+    vncport = tw2.forms.TextField(validator=tw2.core.IntValidator)
+    conport = tw2.forms.TextField(validator=tw2.core.IntValidator)
+    netnone = tw2.forms.CheckBox()
+    cpu = tw2.forms.SingleSelectField(
+        options=[x.ctype for x in  model.CPUType.query.all()])
+    machtype = tw2.forms.SingleSelectField(
+            options=[x.mtype for x in model.MachineType.query.all()])
+    action = '/machineedit' 
 
 
 class DriveForm(tw2.sqla.DbFormPage):

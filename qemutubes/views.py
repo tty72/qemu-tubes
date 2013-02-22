@@ -3,7 +3,7 @@ from pyramid.view import view_config
 import qemutubes.widgets
 import tw2.core
 from sqlalchemy.exc import DBAPIError
-
+from pyramid.httpexceptions import HTTPFound
 from .models import (
     DBSession,
     Machine,
@@ -26,9 +26,22 @@ class MachineView(ViewClass):
 
     @view_config(route_name='machine_edit', renderer='templates/edit.genshi')
     def machine_edit(self):
-        widget = qemutubes.widgets.MachineForm.req()
-        widget.fetch_data(self.request)
-        tw2.core.register_controller(widget, 'machine_submit')
+        mid = self.request.params.get('id', None)
+        if self.request.method == 'GET':
+            widget = qemutubes.widgets.MachineForm.req()
+            if mid:
+                widget.fetch_data(self.request)
+        elif self.request.method == 'POST':
+            try:
+                data = qemutubes.widgets.MachineForm.validate(
+                    self.request.POST)
+                ## Store data here
+                url = self.request.route_url('machine_grid') 
+                return HTTPFound(location=url)
+            except tw2.core.ValidationError, e:
+                widget = e.widget.req()
+        #widget.fetch_data(self.request)
+        #tw2.core.register_controller(widget, 'machine_submit')
         return {'form': widget}
 
     @view_config(route_name='machine_del')
