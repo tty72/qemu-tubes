@@ -8,7 +8,6 @@ CHANGES = open(os.path.join(here, 'CHANGES.rst')).read()
 
 requires = [
     'pyramid',
-    'subprocess==2.7',
     'SQLAlchemy',
     'transaction',
     'pyramid_tm',
