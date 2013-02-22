@@ -16,8 +16,8 @@ class ViewClass(object):
 
 class MachineView(ViewClass):
     
-    @view_config(route_name='machine_grid', r
-                 enderer='templates/mac_grid.genshi')
+    @view_config(route_name='machine_grid', 
+                 renderer='templates/mac_grid.genshi')
     def machine_grid(self):
         widget = qemutubes.widgets.MachineGrid.req()
         tw2.core.register_controller(widget, 'db_jqgrid')
