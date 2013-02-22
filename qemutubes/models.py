@@ -31,7 +31,7 @@ DRIVE_IFS = ('ide', 'scsi', 'sd', 'mtd', 'floppy', 'pflash', 'virtio',)
 MEDIA = ('disk', 'cdrom',)
 CACHE_TYPES = ('writeback', 'none', 'unsafe', 'writethrough',)
 AIO_TYPES = ('native', 'threads')
-NET_TYPES = ('nic', 'vde', 'tap') #FIXME: Add user, etc.
+NET_TYPES = ('nic', 'vde', 'tap', 'user', 'socket', 'dump') 
 
 class CPUType(Base):
     __tablename__ = 'cpu_types'
@@ -112,7 +112,7 @@ class Drive(Base):
             x +=  ',serial=%s' % self.ser
         return ['-drive', x]
 
-class Nets(Base):
+class Net(Base):
     __tablename__ = 'nets'
     id = Column(Integer, primary_key=True)
     machine_id = Column(Integer, ForeignKey('machines.id'))
@@ -123,14 +123,14 @@ class Nets(Base):
     model = Column(Text, ForeignKey('nic_types.ntype'))
     macaddr = Column(Text)
     # VDE cols
-    vde = Column(Integer, ForeignKey('vdes.id'), nullable=False)
+    vde = Column(Integer, ForeignKey('vdes.id'))
     port = Column(Integer)
     # Tap cols
     script = Column(Text)
     downscript = Column(Text)
-    ifname = Column(Text, nullable=False)
+    ifname = Column(Text)
 
-    machine = relationship('Machine')
+    #machine = relationship('Machine')
 
     @property
     def args(self):
@@ -140,7 +140,13 @@ class Nets(Base):
             return self.args_vde
         elif self.ntype == 'tap':
             return self.args_tap
-
+        elif self.ntype == 'user':
+            raise NotImplementedError
+        elif self.ntype == 'socket':
+            raise NotImplementedError
+        elif self.type == 'dump':
+            raise NotImplementedError
+            
     @property
     def args_nic(self):
         x = 'nic'
@@ -194,9 +200,7 @@ class Machine(Base):
     conport = Column(Integer, unique=True, nullable=False)
     netnone = Column(Boolean, default=False)
     drives = relationship('Drive', backref='machine')
-    net_nics = relationship('NetNIC')
-    net_vdes = relationship('NetVDE')
-    net_taps = relationship('NetTap')
+    nets = relationship('Net', backref='machine')
 #    drive_count = column_property(
 #        select([func.count(Drive.id)]).where(Drive.id == id))
 #    net_count = column_property(
@@ -218,11 +222,7 @@ class Machine(Base):
         if self.machtype:
             a.extend(['-M', '%s' % self.machtype])
         if not self.netnone:
-            for n in self.net_nics:
-                a.extend(n.args)
-            for n in self.net_vdes:
-                a.extend(n.args)
-            for n in self.net_taps:
+            for n in self.nets:
                 a.extend(n.args)
         for d in self.drives:
             a.extend(d.args)

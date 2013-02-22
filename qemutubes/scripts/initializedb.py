@@ -17,9 +17,7 @@ from ..models import (
     NICType,
     Machine,
     Drive,
-    NetNIC,
-    NetVDE,
-    NetTap,
+    Net,
     Base,
     )
 
@@ -95,7 +93,8 @@ def main(argv=sys.argv):
         d.ser='SG324323'
         d.machine=m
         DBSession.add(d)
-        n1 = NetNIC()
+        n1 = Net()
+        n1.ntype='nic'
         n1.machine = m
         n1.vlan = 1
         n1.model = 'ne2k_pci'
