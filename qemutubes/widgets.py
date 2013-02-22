@@ -7,7 +7,14 @@ import sqlalchemy as sa
 from tw2.sqla import utils as sautil
 
 class DBForm(object):
+    """ Base class for DB related form widgets
+    Provides helper methods for fetching and storing data to a model
+    """
     def fetch_data(self, req):
+        """ Load form values from given Model (entity) given appropriate 
+            Primary keys.
+            Copied from tw2.sqla.DbFormPage class
+        """
         data = req.GET.mixed()
         filter = dict((col.name, data.get(col.name))
                         for col in sa.orm.class_mapper(self.entity).primary_key)
@@ -15,14 +22,13 @@ class DBForm(object):
 
     @classmethod
     def insert_or_update(cls, data):
+        """ Wrapper for tw2.sqla.utils update_or_create() """
         sautil.update_or_create(cls.entity, data)
 
 class MachineGrid(tw2.jqplugins.jqgrid.SQLAjqGridWidget):
     id = 'machine_grid'
     entity = model.Machine
     excluded_columns = ['id', 'drives', 'net_nics', 'net_vdes', 'net_taps',]
-    #edmachine = tw2.core.js_callback(""""function(){ var grid=$('#%s'); alert(grid.jqGrid('getGridParam', 'selarrrow')); }""" % id)
-#    prmFilter = {'stringResult': True, 'searchOnEnter': False}
     pager_options = { "search" : True, "refresh" : True, "add" : True, 
                       "addfunc":tw2.core.js_callback("function(){window.location='/machineedit'}"), 
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/machineedit?id=' + row_id}"),
@@ -144,7 +150,6 @@ class DriveForm(tw2.forms.TableForm, DBForm):
         aio = tw2.forms.SingleSelectField(
             options=model.AIO_TYPES, value=model.AIO_TYPES[0])
         ser = tw2.forms.TextField()
-        #FIXME: Pull prefix for action URL from config controller_prefix
         action = '/driveedit'
 
 class NetGrid(tw2.jqplugins.jqgrid.jqGridWidget):
