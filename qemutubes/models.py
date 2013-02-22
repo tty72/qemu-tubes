@@ -31,6 +31,7 @@ DRIVE_IFS = ('ide', 'scsi', 'sd', 'mtd', 'floppy', 'pflash', 'virtio',)
 MEDIA = ('disk', 'cdrom',)
 CACHE_TYPES = ('writeback', 'none', 'unsafe', 'writethrough',)
 AIO_TYPES = ('native', 'threads')
+NET_TYPES = ('nic', 'vde', 'tap') #FIXME: Add user, etc.
 
 class CPUType(Base):
     __tablename__ = 'cpu_types'
@@ -111,18 +112,37 @@ class Drive(Base):
             x +=  ',serial=%s' % self.ser
         return ['-drive', x]
 
-class NetNIC(Base):
-    __tablename__ = 'net_nics'
+class Nets(Base):
+    __tablename__ = 'nets'
     id = Column(Integer, primary_key=True)
     machine_id = Column(Integer, ForeignKey('machines.id'))
-    model = Column(Text, ForeignKey('nic_types.ntype'))
+    ntype = Column(Enum(*NET_TYPES), default=NET_TYPES[0])
     vlan = Column(Integer)
-    macaddr = Column(Text)
     name = Column(Text)
+    # NIC cols
+    model = Column(Text, ForeignKey('nic_types.ntype'))
+    macaddr = Column(Text)
+    # VDE cols
+    vde = Column(Integer, ForeignKey('vdes.id'), nullable=False)
+    port = Column(Integer)
+    # Tap cols
+    script = Column(Text)
+    downscript = Column(Text)
+    ifname = Column(Text, nullable=False)
+
     machine = relationship('Machine')
 
     @property
     def args(self):
+        if self.ntype == 'nic':
+            return self.args_nic
+        elif self.ntype == 'vde':
+            return self.args_vde
+        elif self.ntype == 'tap':
+            return self.args_tap
+
+    @property
+    def args_nic(self):
         x = 'nic'
         if self.model:
             x += ',model=%s' % self.model
@@ -134,18 +154,8 @@ class NetNIC(Base):
             x += ',name="%s"' % self.name
         return ['-net', x]
 
-class NetVDE(Base):
-    __tablename__ = 'net_vdes'
-    id = Column(Integer, primary_key=True)
-    machine_id = Column(Integer, ForeignKey('machines.id'))
-    vlan = Column(Integer)
-    name = Column(Text)
-    vde = Column(Integer, ForeignKey('vdes.id'), nullable=False)
-    port = Column(Integer)
-    machine = relationship('Machine')
-
     @property
-    def args(self):
+    def args_vde(self):
         x = 'vde'
         x += ',sock="%s"' % self.vde.sock
         if self.port:
@@ -156,19 +166,8 @@ class NetVDE(Base):
             x += ',name="%s"' % self.name
         return ['-net', x]
 
-class NetTap(Base):
-    __tablename__ = 'net_taps'
-    id = Column(Integer, primary_key=True)
-    machine_id = Column(Integer, ForeignKey('machines.id'))
-    vlan = Column(Integer)
-    name = Column(Text)
-    script = Column(Text)
-    downscript = Column(Text)
-    ifname = Column(Text, nullable=False)
-    machine = relationship('Machine')
-
     @property
-    def args(self):
+    def args_tap(self):
         x = 'tap,ifname=%s' % self.ifname
         if self.vlan:
             x += ',vlan=%d' % self.vlan

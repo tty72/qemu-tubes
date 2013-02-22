@@ -97,7 +97,7 @@ class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
             ]
                     
     }
-    #prmDel = {'url': '/machinedelete'}
+    prmDel = {'url': '/drivedelete'}
     def prepare(self):
         super(DriveGrid, self).prepare()
         edmac = tw2.core.JSSource(location='head',
