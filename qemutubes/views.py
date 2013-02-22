@@ -11,6 +11,7 @@ from .models import (
     )
 
 class ViewClass(object):
+    """ Base class for views """
     def __init__(self, request):
         self.request = request
 
