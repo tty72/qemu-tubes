@@ -4,6 +4,7 @@ import tw2.sqla
 import tw2.jqplugins.jqgrid
 import qemutubes.models as model
 import sqlalchemy as sa
+from tw2.sqla import utils as sautil
 
 class DBForm(object):
     def fetch_data(self, req):
@@ -11,6 +12,10 @@ class DBForm(object):
         filter = dict((col.name, data.get(col.name))
                         for col in sa.orm.class_mapper(self.entity).primary_key)
         self.value = req.GET and self.entity.query.filter_by(**filter).first() or None
+
+    @classmethod
+    def insert_or_update(cls, data):
+        sautil.update_or_create(cls.entity, data)
 
 class MachineGrid(tw2.jqplugins.jqgrid.SQLAjqGridWidget):
     id = 'machine_grid'
@@ -115,31 +120,32 @@ class MachineForm(tw2.forms.TableForm, DBForm):
     action = '/machineedit' 
 
 
-class DriveForm(tw2.sqla.DbFormPage):
-    title = 'Drive'
-    entity = model.Drive
-    #redirect = '/machineview'
-    
-    class child(tw2.forms.TableForm):
+class DriveForm(tw2.forms.TableForm, DBForm):
         id = tw2.forms.HiddenField()
+        entity = model.Drive
         machine_id = tw2.forms.HiddenField()
         filepath = tw2.forms.TextField(validator=tw2.core.Required)
-        interface = tw2.forms.SingleSelectField(options=model.DRIVE_IFS, value=model.DRIVE_IFS[0])
-        media = tw2.forms.SingleSelectField(options=model.MEDIA, value=model.MEDIA[0],
+        interface = tw2.forms.SingleSelectField(
+            options=model.DRIVE_IFS, value=model.DRIVE_IFS[0])
+        media = tw2.forms.SingleSelectField(options=model.MEDIA, 
+                                            value=model.MEDIA[0],
                                             validator=tw2.core.Required)
         bus = tw2.forms.TextField(validator=tw2.core.IntValidator)
         unit = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        ind = tw2.forms.TextField(validator=tw2.core.IntValidator(min=0, max=3))
+        ind = tw2.forms.TextField(validator=tw2.core.IntValidator(min=0, 
+                                                                  max=3))
         cyls = tw2.forms.TextField(validator=tw2.core.IntValidator)
         heads = tw2.forms.TextField(validator=tw2.core.IntValidator)
         secs = tw2.forms.TextField(validator=tw2.core.IntValidator)
         trans = tw2.forms.TextField(validator=tw2.core.IntValidator)
         snapshot = tw2.forms.CheckBox()
-        cache = tw2.forms.SingleSelectField(options=model.CACHE_TYPES, value=model.CACHE_TYPES[0])
-        aio = tw2.forms.SingleSelectField(options=model.AIO_TYPES, value=model.AIO_TYPES[0])
+        cache = tw2.forms.SingleSelectField(
+            options=model.CACHE_TYPES, value=model.CACHE_TYPES[0])
+        aio = tw2.forms.SingleSelectField(
+            options=model.AIO_TYPES, value=model.AIO_TYPES[0])
         ser = tw2.forms.TextField()
         #FIXME: Pull prefix for action URL from config controller_prefix
-        action = '/tw2_controllers/drive_submit'
+        action = '/driveedit'
 
 class NetGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     id = 'net_grid'

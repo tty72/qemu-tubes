@@ -35,13 +35,12 @@ class MachineView(ViewClass):
             try:
                 data = qemutubes.widgets.MachineForm.validate(
                     self.request.POST)
-                ## Store data here
+                #FIXME: Cacth constraint violations here
+                qemutubes.widgets.MachineForm.insert_or_update(data)
                 url = self.request.route_url('machine_grid') 
                 return HTTPFound(location=url)
             except tw2.core.ValidationError, e:
                 widget = e.widget.req()
-        #widget.fetch_data(self.request)
-        #tw2.core.register_controller(widget, 'machine_submit')
         return {'form': widget}
 
     @view_config(route_name='machine_del')
@@ -66,18 +65,37 @@ class DriveView(ViewClass):
 
     @view_config(route_name='drive_edit', renderer='templates/edit.genshi')
     def drive_edit(self):
-        macid = self.request.params.get('machine_id', None)
-        if not macid:
-            did = self.request.params['id']
+        did = self.request.params.get('id', None)
+        mid = self.request.params.get('machine_id', None)
+        if not mid:
             d = DBSession.query(Drive).filter(Drive.id == did).first()
-            macid = d.machine_id
-        widget = qemutubes.widgets.DriveForm(
-            redirect='/machineview?id=%s'%str(macid)).req()
-        widget.fetch_data(self.request)
-        if not widget.value:
-            widget.value = {'machine_id': macid}
-        tw2.core.register_controller(widget, 'drive_submit')
+            mid = d.machine_id
+        if self.request.method == 'GET':
+            widget = qemutubes.widgets.DriveForm.req()
+            if did:
+                widget.fetch_data(self.request)
+            else:
+                widget.value = {'machine_id': mid}
+        elif self.request.method == 'POST':
+            try:
+                data = qemutubes.widgets.DriveForm.validate(
+                    self.request.POST)
+                #FIXME: Cacth constraint violations here
+                qemutubes.widgets.DriveForm.insert_or_update(data)
+                url = self.request.route_url('machine_view')
+                print "URL#$#$##$#$$#URL: ",url
+                url += '?id=%s'%str(mid)
+                return HTTPFound(location=url)
+            except tw2.core.ValidationError, e:
+                widget = e.widget.req()
         return {'form': widget}
+#        widget = qemutubes.widgets.DriveForm(
+#            redirect='/machineview?id=%s'%str(macid)).req()
+#        widget.fetch_data(self.request)
+#        if not widget.value:
+#            widget.value = {'machine_id': macid}
+#        tw2.core.register_controller(widget, 'drive_submit')
+#        return {'form': widget}
 
     @view_config(route_name='drive_grid', renderer='json')
     def drive_grid(self):
