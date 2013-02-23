@@ -63,7 +63,7 @@ def main(argv=sys.argv):
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
-    qemubin = settings.get('qemubin', '/usr/bin/qemu')
+    qemubin = settings.get('qtubes.qemubin', '/usr/bin/qemu')
     cpus = cpu_list(qemubin)
     print "Supported CPUs: ",cpus
     machs = machine_list(qemubin)
