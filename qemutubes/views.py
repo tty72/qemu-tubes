@@ -8,6 +8,7 @@ from .models import (
     DBSession,
     Machine,
     Drive,
+    Net,
     )
 
 class ViewClass(object):
@@ -68,7 +69,9 @@ class MachineView(ViewClass):
             Machine.id==self.request.params['id']).first()
         dwidget = qemutubes.widgets.DriveGrid.req()
         dwidget.options['url'] = '/json/drivegrid?mac_id=%d' % m.id
-        return {'drivegrid': dwidget, 'machine': m}
+        nwidget = qemutubes.widgets.NetGrid.req()
+        nwidget.options['url'] = '/json/netgrid?mac_id=%d' % m.id
+        return {'drivegrid': dwidget, 'netgrid': nwidget, 'machine': m}
 
 class DriveView(ViewClass):
     """ Methods and views to manipulate a Drive model """
@@ -127,6 +130,64 @@ class DriveView(ViewClass):
         Requires request.params['id'] point to a valid Drive id
         """
         Drive.query.filter(Drive.id==self.request.params['id']).delete()
+        return Response("Ok")
+
+class NetView(ViewClass):
+    """ Methods and views to manipulate a Net model """
+
+    @view_config(route_name='net_grid', renderer='json')
+    def grid(self):
+        """ Return JSON data for widget.NetGrid request 
+        Requires request.params['mac-id'] points to a valid Machine id
+        """
+        mac = self.request.params.get('mac_id', None)
+        if mac == None:
+            return []
+        nets = DBSession.query(Net).filter(Net.machine_id==mac)
+        nlist = [{ 'id': x.id, 'cell': [x.ntype, x.name, x.vlan,
+                x.model, x.macaddr, x.vde,
+                x.port, x.ifname,]} for x in nets]
+        res = { 'total': 1, 'page': 1, 'records': len(nlist), 
+                'rows': nlist, 'userdata': mac }
+        return res
+      
+    @view_config(route_name='net_edit', renderer='templates/edit.genshi')
+    def edit(self):
+        """ Begin editing a new Net unit, or validate and store an edit """
+        # We should either have a machine_id or a net_id coming in here
+        nid = self.request.params.get('id', None)
+        mid = self.request.params.get('machine_id', None)
+        if not mid:
+            # Get machine_if from the drive we're editing
+            n = DBSession.query(Net).filter(Net.id == nid).first()
+            mid = n.machine_id
+        if self.request.method == 'GET':
+            # Assume GET is a request to begin editing
+            widget = qemutubes.widgets.NetForm.req()
+            if nid:
+                widget.fetch_data(self.request)
+            else:
+                widget.value = {'machine_id': mid}
+        elif self.request.method == 'POST':
+            # Assume post is an edit coming in. Validate and store it.
+            try:
+                data = qemutubes.widgets.NetForm.validate(
+                    self.request.POST)
+                #FIXME: Cacth constraint violations here
+                qemutubes.widgets.NetForm.insert_or_update(data)
+                url = self.request.route_url('machine_view')
+                url += '?id=%s'%str(mid) # Better method for this?
+                return HTTPFound(location=url)
+            except tw2.core.ValidationError, e:
+                widget = e.widget.req()
+        return {'form': widget}
+
+    @view_config(route_name='net_delete')
+    def delete(self):
+        """ Delete a Net instance.
+        Requires request.params['id'] point to a valid Net id
+        """
+        Net.query.filter(Net.id==self.request.params['id']).delete()
         return Response("Ok")
 
 

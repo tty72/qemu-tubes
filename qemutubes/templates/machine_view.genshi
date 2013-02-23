@@ -7,8 +7,11 @@
     <title>Machine View</title>
   </head>
   <body class="submit">
-
-    ${drivegrid.display()}
-
+    <div>
+      ${drivegrid.display()}
+    </div>
+    <div>
+      ${netgrid.display()}
+    </div>
   </body>
 </html>

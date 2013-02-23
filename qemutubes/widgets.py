@@ -28,7 +28,8 @@ class DBForm(object):
 class MachineGrid(tw2.jqplugins.jqgrid.SQLAjqGridWidget):
     id = 'machine_grid'
     entity = model.Machine
-    excluded_columns = ['id', 'drives', 'net_nics', 'net_vdes', 'net_taps',]
+    #FIXME: Including Nets and Drives breaks SQLAjqGridWidget
+    excluded_columns = ['id', 'drives', 'nets',]
     pager_options = { "search" : True, "refresh" : True, "add" : True, 
                       "addfunc":tw2.core.js_callback("function(){window.location='/machineedit'}"), 
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/machineedit?id=' + row_id}"),
@@ -104,6 +105,45 @@ class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
                                   src="""function GetMac() { return $('#%s').jqGrid('getGridParam', 'userData'); }""" %self.selector)
         self.resources.append(edmac)
 
+class NetGrid(tw2.jqplugins.jqgrid.jqGridWidget):
+    id = 'net_grid'
+    pager_options = { "search" : True, "refresh" : True, "add" : True, 
+                      "addfunc":tw2.core.js_callback("function(){window.location='/netedit?machine_id=' + GetMac()}"), 
+                      "editfunc":tw2.core.js_callback("function(row_id){location.href='/netedit?id=' + row_id }"),
+                      }
+    options = {
+        'pager': 'module-1-demo_pager',
+        'url': '/json/netgrid',
+        'datatype': 'json',
+        'mtype': 'GET',
+        'caption': 'Net Interfaces',
+        'rowNum':15,
+        'rowList':[15,30,50],
+        'viewrecords':True,
+        'imgpath': 'scripts/jqGrid/themes/green/images',
+        'width': 900,
+        'height': 'auto',
+        'colNames': ['Type', 'Name', 'VLan', 'Model', 'MacAddr', 'VDE', 
+                    'VDE Port', 'Tap Iface',],
+        'colModel': [
+            { 'name': 'type', 'index': 'filepath', },
+            { 'name': 'name', 'index': 'interface', 'width': '100', 'align': 'center', },
+            { 'name': 'vlan', 'width': '80', 'align': 'center', },
+            { 'name': 'model', 'width': '60', 'align': 'center', },
+            { 'name': 'macaddr', 'width': '60', 'align': 'center', },
+            { 'name': 'vde', 'width': '60', 'align': 'center', },
+            { 'name': 'port', 'width': '80', 'align': 'center', },
+            { 'name': 'ifname', 'width': '80', 'align': 'center', },
+            ]
+                    
+    }
+    prmDel = {'url': '/netdelete'}
+    def prepare(self):
+        super(NetGrid, self).prepare()
+        edmac = tw2.core.JSSource(location='head',
+                                  src="""function GetMac() { return $('#%s').jqGrid('getGridParam', 'userData'); }""" %self.selector)
+        self.resources.append(edmac)
+
 
 
 #class MachineForm(tw2.sqla.DbFormPage):
@@ -112,8 +152,8 @@ class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
 #    redirect = '/'
 
 class MachineForm(tw2.forms.TableForm, DBForm):
-    id = tw2.forms.HiddenField()
     entity = model.Machine
+    id = tw2.forms.HiddenField()
     name = tw2.forms.TextField(validator=tw2.core.Required)
     mem = tw2.forms.TextField()
     vncport = tw2.forms.TextField(validator=tw2.core.IntValidator)
@@ -127,8 +167,8 @@ class MachineForm(tw2.forms.TableForm, DBForm):
 
 
 class DriveForm(tw2.forms.TableForm, DBForm):
-        id = tw2.forms.HiddenField()
         entity = model.Drive
+        id = tw2.forms.HiddenField()
         machine_id = tw2.forms.HiddenField()
         filepath = tw2.forms.TextField(validator=tw2.core.Required)
         interface = tw2.forms.SingleSelectField(
@@ -152,43 +192,10 @@ class DriveForm(tw2.forms.TableForm, DBForm):
         ser = tw2.forms.TextField()
         action = '/driveedit'
 
-class NetGrid(tw2.jqplugins.jqgrid.jqGridWidget):
-    id = 'net_grid'
-    pager_options = { "search" : True, "refresh" : True, "add" : True, 
-                      "addfunc":tw2.core.js_callback("function(){window.location='/netedit?machine_id=' + GetMac()}"), 
-                      "editfunc":tw2.core.js_callback("function(row_id){location.href='/netedit?id=' + row_id }"),
-                      }
-    options = {
-        'pager': 'module-0-demo_pager',
-        'url': '/json/netgrid',
-        'datatype': 'json',
-        'mtype': 'GET',
-        'caption': 'Nets',
-        'rowNum':15,
-        'rowList':[15,30,50],
-        'viewrecords':True,
-        'imgpath': 'scripts/jqGrid/themes/green/images',
-        'width': 900,
-        'height': 'auto',
-        'colNames': ['Filepath', 'Interface', 'Media', 'Bus', 'Unit', 'Index', 
-                    'Snapshot', 'Cache', 'AIO', 'Serial'],
-        'colModel': [
-            { 'name': 'filepath', 'index': 'filepath', },
-            { 'name': 'interface', 'index': 'interface', 'width': '100', 'align': 'center', },
-            { 'name': 'media', 'width': '80', 'align': 'center', },
-            { 'name': 'bus', 'width': '60', 'align': 'center', },
-            { 'name': 'unit', 'width': '60', 'align': 'center', },
-            { 'name': 'ind', 'width': '60', 'align': 'center', },
-            { 'name': 'snapshot', 'width': '80', 'align': 'center', },
-            { 'name': 'cache', 'width': '80', 'align': 'center', },
-            { 'name': 'aio', 'width': '80', 'align': 'center', },
-            { 'name': 'ser' },
-            ]
-                    
-    }
-    #prmDel = {'url': '/machinedelete'}
-    def prepare(self):
-        super(DriveGrid, self).prepare()
-        edmac = tw2.core.JSSource(location='head',
-                                  src="""function GetMac() { return $('#%s').jqGrid('getGridParam', 'userData'); }""" %self.selector)
-        self.resources.append(edmac)
+class NetForm(tw2.forms.TableForm, DBForm):
+        entity = model.Drive
+        id = tw2.forms.HiddenField()
+        machine_id = tw2.forms.HiddenField()
+        name = tw2.forms.TextField(validator=tw2.core.Required)
+        action = '/netedit'
+
