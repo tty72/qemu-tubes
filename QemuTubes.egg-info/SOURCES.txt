@@ -1,7 +1,9 @@
-CHANGES.txt
+CHANGES.rst
 MANIFEST.in
-README.txt
+README.rst
+TODO.rst
 development.ini
+mydev.ini
 production.ini
 setup.cfg
 setup.py
@@ -16,6 +18,8 @@ qemutubes/__init__.py
 qemutubes/models.py
 qemutubes/tests.py
 qemutubes/views.py
+qemutubes/widgets.py
+qemutubes/css/layout.css
 qemutubes/scripts/__init__.py
 qemutubes/scripts/initializedb.py
 qemutubes/static/favicon.ico
@@ -27,4 +31,8 @@ qemutubes/static/pylons.css
 qemutubes/static/pyramid-small.png
 qemutubes/static/pyramid.png
 qemutubes/static/transparent.gif
-qemutubes/templates/mytemplate.pt
+qemutubes/templates/edit.genshi
+qemutubes/templates/mac_grid.genshi
+qemutubes/templates/machine_edit.genshi
+qemutubes/templates/machine_view.genshi
+qemutubes/templates/master.genshi
