@@ -13,6 +13,30 @@ div#content {
     margin-right: auto;
 }
 
+.cmdline:before {
+    color: #c00;
+    content:"CMDLINE:";
+    font-style: italic;
+    position: absolute;
+    left: -11em;
+}
+
+.cmdline {
+    text-align: left;
+    position: relative;
+    left: 5em;
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+/*    white-space: pre;*/
+    font-family: monospace;
+}
+
+.cmdline:first-line {
+    position: relative;
+    left: -10em;
+}
+
 #footer {
    position:absolute;
    bottom: 0px;

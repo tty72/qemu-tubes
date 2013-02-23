@@ -77,7 +77,8 @@ class MachineView(ViewClass):
         dwidget.options['url'] = '/json/drivegrid?mac_id=%d' % m.id
         nwidget = qemutubes.widgets.NetGrid.req()
         nwidget.options['url'] = '/json/netgrid?mac_id=%d' % m.id
-        return {'drivegrid': dwidget, 'netgrid': nwidget, 'machine': m}
+        return {'drivegrid': dwidget, 'netgrid': nwidget, 'machine': m,
+                'cmdline': m.cmdline}
 
 class DriveView(ViewClass):
     """ Methods and views to manipulate a Drive model """
@@ -151,7 +152,7 @@ class NetView(ViewClass):
             return []
         nets = DBSession.query(Net).filter(Net.machine_id==mac)
         nlist = [{ 'id': x.id, 'cell': [x.ntype, x.name, x.vlan,
-                x.nicmodel, x.macaddr, x.vde,
+                x.nicmodel, x.macaddr, x.vde.name if x.vde else '',
                 x.port, x.ifname,]} for x in nets]
         res = { 'total': 1, 'page': 1, 'records': len(nlist), 
                 'rows': nlist, 'userdata': mac }

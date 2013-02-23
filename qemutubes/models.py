@@ -131,14 +131,14 @@ class Net(Base):
     nicmodel = Column(Text, ForeignKey('nic_types.ntype'))
     macaddr = Column(Text)
     # VDE cols
-    vde = Column(Integer, ForeignKey('vdes.id'))
+    vde_id = Column(Integer, ForeignKey('vdes.id'))
     port = Column(Integer)
     # Tap cols
     script = Column(Text)
     downscript = Column(Text)
     ifname = Column(Text)
 
-    #machine = relationship('Machine')
+    vde = relationship('VDE')
 
     @property
     def args(self):
@@ -159,8 +159,8 @@ class Net(Base):
     def args_nic(self):
         x = 'nic'
         if self.nicmodel:
-            x += ',model=%s' % self.model
-        if self.vlan:
+            x += ',model=%s' % self.nicmodel
+        if self.vlan != None:
             x += ',vlan=%d' % self.vlan
         if self.macaddr:
             x += ',macaddr=%s' %self.macaddr
@@ -174,7 +174,7 @@ class Net(Base):
         x += ',sock="%s"' % self.vde.sock
         if self.port:
             x += ',port=%d' % self.port
-        if self.vlan:
+        if self.vlan != None:
             x += ',vlan=%d' % self.vlan
         if self.name:
             x += ',name="%s"' % self.name
@@ -183,7 +183,7 @@ class Net(Base):
     @property
     def args_tap(self):
         x = 'tap,ifname=%s' % self.ifname
-        if self.vlan:
+        if self.vlan != None:
             x += ',vlan=%d' % self.vlan
         if self.name:
             x += ',name="%s"' % self.name
@@ -222,6 +222,7 @@ class Machine(Base):
              '-monitor', 'telnet::%d,server,nowait' % self.conport,
              '-name', '"%s"' % self.name,
              '-pidfile', '/var/run/qemu/%d.pid' % self.id,
+             '-daemon',
              ]
         if self.mem:
             a.extend(['-m', '%s' % self.mem])
@@ -238,7 +239,7 @@ class Machine(Base):
 
     @property
     def cmdline(self):
-        return ' '.join(self.args)
+        return '  '.join(self.args)
         
     def __str__(self):
         return self.cmdline

@@ -7,6 +7,8 @@
     <title>Machine View</title>
   </head>
   <body class="submit">
+    <h1> Machine: ${machine.name} </h1>
+    <h3 class="cmdline">${cmdline}</h3>
     <div>
       ${drivegrid.display()}
     </div>
