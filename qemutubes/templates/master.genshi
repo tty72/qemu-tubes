@@ -20,7 +20,7 @@
         ${select('*|text()')}
       </div>
       <div id="footer">
-        <p class="legalese">© 2013 Autumn Attic</p>
+        <p class="legalese">QemuTubes is Free Software released under the GNU/GPL License</p>
       </div>
     </div></body>
   </py:match>
