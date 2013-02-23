@@ -49,7 +49,7 @@ class MachineView(ViewClass):
                     self.request.POST)
                 #FIXME: Catch constraint violations here
                 qemutubes.widgets.MachineForm.insert_or_update(data)
-                url = self.request.route_url('machine_grid') 
+                url = self.request.route_url('main') 
                 return HTTPFound(location=url)
             except tw2.core.ValidationError, e:
                 widget = e.widget.req()

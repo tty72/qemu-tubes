@@ -27,6 +27,9 @@
   See this thread: 
   https://groups.google.com/forum/?fromgroups=#!topic/pylons-discuss/XNYNq2ietsw
   Clean up views.py - convert to class-based views. Remove cruft.
+
+0.5
+---
 - Add VDE grid and editing support
 - Add initial Net editing capability
 - Added NetGrid and related Net views

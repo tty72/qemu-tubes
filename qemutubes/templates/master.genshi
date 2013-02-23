@@ -20,7 +20,6 @@
         ${select('*|text()')}
       </div>
       <div id="footer">
-        <hr />
         <p class="legalese">© 2013 Autumn Attic</p>
       </div>
     </div></body>
