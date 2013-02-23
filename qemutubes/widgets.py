@@ -6,6 +6,18 @@ import qemutubes.models as model
 import sqlalchemy as sa
 from tw2.sqla import utils as sautil
 
+def list_vdes():
+    return [vde.name for vde in model.VDE.query.all()]
+
+def list_cputypes():
+    return [cpu.ctype for cpu in model.CPUType.query.all()]
+
+def list_machinetypes():
+    return [machine.mtype for machine in model.MachineType.query.all()]
+
+def list_nictypes():
+    return [nic.ntype for nic in  model.NICType.query.all()]
+
 class DBForm(object):
     """ Base class for DB related form widgets
     Provides helper methods for fetching and storing data to a model
@@ -189,70 +201,76 @@ class MachineForm(tw2.forms.TableForm, DBForm):
     vncport = tw2.forms.TextField(validator=tw2.core.IntValidator)
     conport = tw2.forms.TextField(validator=tw2.core.IntValidator)
     netnone = tw2.forms.CheckBox()
-    cpu = tw2.forms.SingleSelectField(
-        options=[x.ctype for x in  model.CPUType.query.all()])
-    machtype = tw2.forms.SingleSelectField(
-            options=[x.mtype for x in model.MachineType.query.all()])
+    cpu = tw2.forms.SingleSelectField(options=list_cputypes())
+    machtype = tw2.forms.SingleSelectField(options=list_machinetypes())
     action = '/machineedit' 
+
+    def prepare(self):
+        super(MachineForm, self).prepare()
+        self.child.c.cpu.options = list_cputypes()
+        self.child.c.machtype.options = list_machinetypes()
 
 
 class DriveForm(tw2.forms.TableForm, DBForm):
-        entity = model.Drive
-        id = tw2.forms.HiddenField()
-        machine_id = tw2.forms.HiddenField()
-        filepath = tw2.forms.TextField(validator=tw2.core.Required)
-        interface = tw2.forms.SingleSelectField(
-            options=model.DRIVE_IFS, value=model.DRIVE_IFS[0])
-        media = tw2.forms.SingleSelectField(options=model.MEDIA, 
-                                            value=model.MEDIA[0],
-                                            validator=tw2.core.Required)
-        bus = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        unit = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        ind = tw2.forms.TextField(validator=tw2.core.IntValidator(min=0, 
-                                                                  max=3))
-        cyls = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        heads = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        secs = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        trans = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        snapshot = tw2.forms.CheckBox()
-        cache = tw2.forms.SingleSelectField(
-            options=model.CACHE_TYPES, value=model.CACHE_TYPES[0])
-        aio = tw2.forms.SingleSelectField(
-            options=model.AIO_TYPES, value=model.AIO_TYPES[0])
-        ser = tw2.forms.TextField()
-        action = '/driveedit'
+    entity = model.Drive
+    id = tw2.forms.HiddenField()
+    machine_id = tw2.forms.HiddenField()
+    filepath = tw2.forms.TextField(validator=tw2.core.Required)
+    interface = tw2.forms.SingleSelectField(
+        options=model.DRIVE_IFS, value=model.DRIVE_IFS[0])
+    media = tw2.forms.SingleSelectField(options=model.MEDIA, 
+                                        value=model.MEDIA[0],
+                                        validator=tw2.core.Required)
+    bus = tw2.forms.TextField(validator=tw2.core.IntValidator)
+    unit = tw2.forms.TextField(validator=tw2.core.IntValidator)
+    ind = tw2.forms.TextField(validator=tw2.core.IntValidator(min=0, 
+                                                              max=3))
+    cyls = tw2.forms.TextField(validator=tw2.core.IntValidator)
+    heads = tw2.forms.TextField(validator=tw2.core.IntValidator)
+    secs = tw2.forms.TextField(validator=tw2.core.IntValidator)
+    trans = tw2.forms.TextField(validator=tw2.core.IntValidator)
+    snapshot = tw2.forms.CheckBox()
+    cache = tw2.forms.SingleSelectField(
+        options=model.CACHE_TYPES, value=model.CACHE_TYPES[0])
+    aio = tw2.forms.SingleSelectField(
+        options=model.AIO_TYPES, value=model.AIO_TYPES[0])
+    ser = tw2.forms.TextField()
+    action = '/driveedit'
 
 class NetForm(tw2.forms.TableForm, DBForm):
-        entity = model.Net
-        id = tw2.forms.HiddenField()
-        machine_id = tw2.forms.HiddenField()
-        name = tw2.forms.TextField(validator=tw2.core.Required)
-        ntype = tw2.forms.SingleSelectField(
-            options=model.NET_TYPES,
-            validator=tw2.core.Required)
-        vlan = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        nicmodel = tw2.forms.SingleSelectField(
-            options=[x.ntype for x in  model.NICType.query.all()])
-        macaddr = tw2.forms.TextField()
-        vde = tw2.forms.SingleSelectField(
-        options=[x.name for x in  model.VDE.query.all()])
-        port = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        script = tw2.forms.TextField()
-        downscript = tw2.forms.TextField()
-        ifname = tw2.forms.TextField()
-        action = '/netedit'
+    entity = model.Net
+    id = tw2.forms.HiddenField()
+    machine_id = tw2.forms.HiddenField()
+    name = tw2.forms.TextField(validator=tw2.core.Required)
+    ntype = tw2.forms.SingleSelectField(
+        options=model.NET_TYPES,
+        validator=tw2.core.Required)
+    vlan = tw2.forms.TextField(validator=tw2.core.IntValidator)
+    nicmodel = tw2.forms.SingleSelectField(options=list_nictypes())
+    macaddr = tw2.forms.TextField()
+    vde = tw2.forms.SingleSelectField(options=list_vdes())
+    port = tw2.forms.TextField(validator=tw2.core.IntValidator)
+    script = tw2.forms.TextField()
+    downscript = tw2.forms.TextField()
+    ifname = tw2.forms.TextField()
+    action = '/netedit'
+
+    def prepare(self):
+        super(NetForm, self).prepare()
+        self.child.c.vde.options = list_vdes()
+        self.child.c.nicmodel.options = list_nictypes()
 
 class VDEForm(tw2.forms.TableForm, DBForm):
-        entity = model.VDE
-        id = tw2.forms.HiddenField()
-        name = tw2.forms.TextField(validator=tw2.core.Required)
-        sock = tw2.forms.TextField(validator=tw2.core.Required)
-        mgmt = tw2.forms.TextField(validator=tw2.core.Required)
-        group = tw2.forms.TextField()
-        rcfile = tw2.forms.TextField()
-        ports = tw2.forms.TextField(validator=tw2.core.IntValidator)
-        hub = tw2.forms.CheckBox()
-        fstp = tw2.forms.CheckBox()
-        macaddr = tw2.forms.TextField()
-        action = '/vdeedit'
+    entity = model.VDE
+    id = tw2.forms.HiddenField()
+    name = tw2.forms.TextField(validator=tw2.core.Required)
+    sock = tw2.forms.TextField(validator=tw2.core.Required)
+    mgmt = tw2.forms.TextField(validator=tw2.core.Required)
+    group = tw2.forms.TextField()
+    rcfile = tw2.forms.TextField()
+    ports = tw2.forms.TextField(validator=tw2.core.IntValidator)
+    hub = tw2.forms.CheckBox()
+    fstp = tw2.forms.CheckBox()
+    macaddr = tw2.forms.TextField()
+    action = '/vdeedit'
 

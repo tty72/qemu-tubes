@@ -115,7 +115,7 @@ class DriveView(ViewClass):
             if did:
                 widget.fetch_data(self.request)
             else:
-                widget.value = {'machine_id': mid}
+                widget.child.c.machine_id.value = mid
         elif self.request.method == 'POST':
             # Assume post is an edit coming in. Validate and store it.
             try:
@@ -173,7 +173,7 @@ class NetView(ViewClass):
             if nid:
                 widget.fetch_data(self.request)
             else:
-                widget.value = {'machine_id': mid}
+                widget.child.c.machine_id.value = mid
         elif self.request.method == 'POST':
             # Assume post is an edit coming in. Validate and store it.
             try:
@@ -227,7 +227,7 @@ class VDEView(ViewClass):
                     self.request.POST)
                 #FIXME: Catch constraint violations here
                 qemutubes.widgets.VDEForm.insert_or_update(data)
-                url = self.request.route_url('vde_grid') 
+                url = self.request.route_url('main') 
                 return HTTPFound(location=url)
             except tw2.core.ValidationError, e:
                 widget = e.widget.req()
