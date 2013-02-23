@@ -63,6 +63,14 @@ class VDE(Base):
     name = Column(Text, unique=True)
     sock = Column(Text, nullable=False)
     mgmt = Column(Text, nullable=False)
+    tap = Column(Text)
+    mode = Column(Text)
+    group = Column(Text)
+    rcfile = Column(Text)
+    ports = Column(Integer)
+    hub = Column(Boolean, default=False)
+    fstp = Column(Boolean)
+    macaddr = Column(Text)
 
 class Drive(Base):
     __tablename__ = 'drives'

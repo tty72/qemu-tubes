@@ -35,7 +35,7 @@ class MachineGrid(tw2.jqplugins.jqgrid.SQLAjqGridWidget):
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/machineedit?id=' + row_id}"),
                       }
     options = {
-        'pager': 'module-0-demo_pager',
+        'pager': 'module-machine-demo_pager',
         'url': '/tw2_controllers/db_jqgrid/',
         'caption': 'Machines',
         'rowNum':15,
@@ -71,7 +71,7 @@ class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/driveedit?id=' + row_id }"),
                       }
     options = {
-        'pager': 'module-0-demo_pager',
+        'pager': 'module-drive-demo_pager',
         'url': '/json/drivegrid',
         'datatype': 'json',
         'mtype': 'GET',
@@ -112,7 +112,7 @@ class NetGrid(tw2.jqplugins.jqgrid.jqGridWidget):
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/netedit?id=' + row_id }"),
                       }
     options = {
-        'pager': 'module-1-demo_pager',
+        'pager': 'module-net-demo_pager',
         'url': '/json/netgrid',
         'datatype': 'json',
         'mtype': 'GET',
@@ -144,12 +144,42 @@ class NetGrid(tw2.jqplugins.jqgrid.jqGridWidget):
                                   src="""function GetMac() { return $('#%s').jqGrid('getGridParam', 'userData'); }""" %self.selector)
         self.resources.append(edmac)
 
-
-
-#class MachineForm(tw2.sqla.DbFormPage):
-#    title = 'Machine'
-#    entity = model.Machine
-#    redirect = '/'
+class VDEGrid(tw2.jqplugins.jqgrid.jqGridWidget):
+    id = 'vde_grid'
+    pager_options = { "search" : True, "refresh" : True, "add" : True, 
+                      "addfunc":tw2.core.js_callback("function(){window.location='/vdeedit'}"), 
+                      "editfunc":tw2.core.js_callback("function(row_id){location.href='/vdeedit?id=' + row_id }"),
+                      }
+    options = {
+        'pager': 'module-vde-demo_pager',
+        'url': '/json/vdegrid',
+        'datatype': 'json',
+        'mtype': 'GET',
+        'caption': 'VDE Instances',
+        'rowNum':15,
+        'rowList':[15,30,50],
+        'viewrecords':True,
+        'imgpath': 'scripts/jqGrid/themes/green/images',
+        'width': 900,
+        'height': 'auto',
+        'colNames': ['Name', 'Socket', 'Management', 'Tap', 'Perms', 'Group', 
+                    'RC File', 'Ports', 'Hub', 'FSTP', 'MacAddr'],
+        'colModel': [
+            { 'name': 'name', 'index': 'filepath', },
+            { 'name': 'sock', 'index': 'interface', 'width': '100', 'align': 'center', },
+            { 'name': 'mgmt', 'width': '80', 'align': 'center', },
+            { 'name': 'tap', 'width': '60', 'align': 'center', },
+            { 'name': 'mode', 'width': '60', 'align': 'center', },
+            { 'name': 'group', 'width': '60', 'align': 'center', },
+            { 'name': 'rcfile', 'width': '80', 'align': 'center', },
+            { 'name': 'ports', 'width': '80', 'align': 'center', },
+            { 'name': 'hub', 'width': '80', 'align': 'center', },
+            { 'name': 'fstp', 'width': '80', 'align': 'center', },
+            { 'name': 'macaddr', 'width': '80', 'align': 'center', },
+            ]
+                    
+    }
+    prmDel = {'url': '/vdedelete'}
 
 class MachineForm(tw2.forms.TableForm, DBForm):
     entity = model.Machine
@@ -211,4 +241,18 @@ class NetForm(tw2.forms.TableForm, DBForm):
         downscript = tw2.forms.TextField()
         ifname = tw2.forms.TextField()
         action = '/netedit'
+
+class VDEForm(tw2.forms.TableForm, DBForm):
+        entity = model.VDE
+        id = tw2.forms.HiddenField()
+        name = tw2.forms.TextField(validator=tw2.core.Required)
+        sock = tw2.forms.TextField(validator=tw2.core.Required)
+        mgmt = tw2.forms.TextField(validator=tw2.core.Required)
+        group = tw2.forms.TextField()
+        rcfile = tw2.forms.TextField()
+        ports = tw2.forms.TextField(validator=tw2.core.IntValidator)
+        hub = tw2.forms.CheckBox()
+        fstp = tw2.forms.CheckBox()
+        macaddr = tw2.forms.TextField()
+        action = '/vdeedit'
 
