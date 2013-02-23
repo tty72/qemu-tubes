@@ -123,13 +123,13 @@ class NetGrid(tw2.jqplugins.jqgrid.jqGridWidget):
         'imgpath': 'scripts/jqGrid/themes/green/images',
         'width': 900,
         'height': 'auto',
-        'colNames': ['Type', 'Name', 'VLan', 'Model', 'MacAddr', 'VDE', 
+        'colNames': ['Type', 'Name', 'VLan', 'NIC Model', 'MacAddr', 'VDE', 
                     'VDE Port', 'Tap Iface',],
         'colModel': [
             { 'name': 'type', 'index': 'filepath', },
             { 'name': 'name', 'index': 'interface', 'width': '100', 'align': 'center', },
             { 'name': 'vlan', 'width': '80', 'align': 'center', },
-            { 'name': 'model', 'width': '60', 'align': 'center', },
+            { 'name': 'nicmodel', 'width': '60', 'align': 'center', },
             { 'name': 'macaddr', 'width': '60', 'align': 'center', },
             { 'name': 'vde', 'width': '60', 'align': 'center', },
             { 'name': 'port', 'width': '80', 'align': 'center', },
@@ -193,9 +193,22 @@ class DriveForm(tw2.forms.TableForm, DBForm):
         action = '/driveedit'
 
 class NetForm(tw2.forms.TableForm, DBForm):
-        entity = model.Drive
+        entity = model.Net
         id = tw2.forms.HiddenField()
         machine_id = tw2.forms.HiddenField()
         name = tw2.forms.TextField(validator=tw2.core.Required)
+        ntype = tw2.forms.SingleSelectField(
+            options=model.NET_TYPES,
+            validator=tw2.core.Required)
+        vlan = tw2.forms.TextField(validator=tw2.core.IntValidator)
+        nicmodel = tw2.forms.SingleSelectField(
+            options=[x.ntype for x in  model.NICType.query.all()])
+        macaddr = tw2.forms.TextField()
+        vde = tw2.forms.SingleSelectField(
+        options=[x.name for x in  model.VDE.query.all()])
+        port = tw2.forms.TextField(validator=tw2.core.IntValidator)
+        script = tw2.forms.TextField()
+        downscript = tw2.forms.TextField()
+        ifname = tw2.forms.TextField()
         action = '/netedit'
 

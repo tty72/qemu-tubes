@@ -120,7 +120,7 @@ class Net(Base):
     vlan = Column(Integer)
     name = Column(Text)
     # NIC cols
-    model = Column(Text, ForeignKey('nic_types.ntype'))
+    nicmodel = Column(Text, ForeignKey('nic_types.ntype'))
     macaddr = Column(Text)
     # VDE cols
     vde = Column(Integer, ForeignKey('vdes.id'))
@@ -150,7 +150,7 @@ class Net(Base):
     @property
     def args_nic(self):
         x = 'nic'
-        if self.model:
+        if self.nicmodel:
             x += ',model=%s' % self.model
         if self.vlan:
             x += ',vlan=%d' % self.vlan

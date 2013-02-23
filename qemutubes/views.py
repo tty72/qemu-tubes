@@ -145,7 +145,7 @@ class NetView(ViewClass):
             return []
         nets = DBSession.query(Net).filter(Net.machine_id==mac)
         nlist = [{ 'id': x.id, 'cell': [x.ntype, x.name, x.vlan,
-                x.model, x.macaddr, x.vde,
+                x.nicmodel, x.macaddr, x.vde,
                 x.port, x.ifname,]} for x in nets]
         res = { 'total': 1, 'page': 1, 'records': len(nlist), 
                 'rows': nlist, 'userdata': mac }
