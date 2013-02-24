@@ -74,13 +74,13 @@ class MachineView(ViewClass):
 #        m = DBSession.query(Machine).filter(
 #            Machine.id==self.request.params['id']).first()
         m = Machine.query.filter(Machine.id==self.request.params['id']).first()
+        m.configure(self.request.registry.settings)
         dwidget = qemutubes.widgets.DriveGrid.req()
         dwidget.options['url'] = '/json/drivegrid?mac_id=%d' % m.id
         nwidget = qemutubes.widgets.NetGrid.req()
         nwidget.options['url'] = '/json/netgrid?mac_id=%d' % m.id
         return {'drivegrid': dwidget, 'netgrid': nwidget, 'machine': m,
-                'cmdline': m.cmdline(self.request.registry.settings)
-                .replace('  ',' \\\n')}
+                'cmdline': m.cmdline.replace('  ',' \\\n')}
 
 class DriveView(ViewClass):
     """ Methods and views to manipulate a Drive model """

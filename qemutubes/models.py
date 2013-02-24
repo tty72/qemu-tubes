@@ -1,4 +1,6 @@
-import os.path as path
+import os
+path = os.path
+import subprocess
 from sqlalchemy import (
     Column,
     Integer,
@@ -35,7 +37,21 @@ CACHE_TYPES = ('writeback', 'none', 'unsafe', 'writethrough',)
 AIO_TYPES = ('native', 'threads')
 NET_TYPES = ('nic', 'vde', 'tap', 'user', 'socket', 'dump') 
 
-class CPUType(Base):
+class PathConfig(object):
+    def configure(self, settings):
+        """ Set various path configuration values
+        settings -- dictionary containing path settings (see development.ini)
+        """
+        self._settings = settings
+        
+    @property
+    def settings(self):
+        try:
+            return self._settings
+        except AttributeError:
+            return None
+
+class CPUType(Base, PathConfig):
     __tablename__ = 'cpu_types'
     ctype = Column(Text, unique=True, primary_key=True)
     def __init__(self, ctype):
@@ -44,7 +60,7 @@ class CPUType(Base):
     def __str__(self):
         return self.ctype
 
-class MachineType(Base):
+class MachineType(Base, PathConfig):
     __tablename__ = 'machine_types'
     mtype = Column(Text, unique=True, primary_key=True)
     def __init__(self, mtype):
@@ -53,13 +69,13 @@ class MachineType(Base):
     def __str__(self):
         return self.mtype
 
-class NICType(Base):
+class NICType(Base, PathConfig):
     __tablename__ = 'nic_types'
     ntype = Column(Text, unique=True, primary_key=True)
     def __init__(self, ntype):
         self.ntype = ntype
 
-class VDE(Base):
+class VDE(Base, PathConfig):
     __tablename__='vdes'
     id = Column(Integer, primary_key=True)
     name = Column(Text, unique=True)
@@ -74,7 +90,7 @@ class VDE(Base):
     fstp = Column(Boolean)
     macaddr = Column(Text)
 
-class Drive(Base):
+class Drive(Base, PathConfig):
     __tablename__ = 'drives'
     id = Column(Integer, primary_key=True)
     machine_id = Column(Integer, ForeignKey('machines.id'))
@@ -95,7 +111,9 @@ class Drive(Base):
     #machine = relationship('Machine')
     __table_args__ = (UniqueConstraint('ind','machine_id'),)
 
-    def args(self, settings):
+    @property
+    def args(self):
+        settings = self.settings
         imgdir = settings and settings['qtubes.image_dir'] or '/tmp'
         filepath = self.filepath if path.isabs(self.filepath) else path.join(
             imgdir, self.filepath)
@@ -126,7 +144,7 @@ class Drive(Base):
             x +=  ',serial=%s' % self.ser
         return [('-drive', x)]
 
-class Net(Base):
+class Net(Base, PathConfig):
     __tablename__ = 'nets'
     id = Column(Integer, primary_key=True)
     machine_id = Column(Integer, ForeignKey('machines.id'))
@@ -146,13 +164,14 @@ class Net(Base):
 
     vde = relationship('VDE')
 
-    def args(self, settings):
+    @property
+    def args(self):
         if self.ntype == 'nic':
-            return self.args_nic(settings)
+            return self.args_nic
         elif self.ntype == 'vde':
-            return self.args_vde(settings)
+            return self.args_vde
         elif self.ntype == 'tap':
-            return self.args_tap(settings)
+            return self.args_tap
         elif self.ntype == 'user':
             raise NotImplementedError
         elif self.ntype == 'socket':
@@ -160,7 +179,8 @@ class Net(Base):
         elif self.type == 'dump':
             raise NotImplementedError
             
-    def args_nic(self, settings):
+    @property
+    def args_nic(self):
         x = 'nic'
         if self.nicmodel:
             x += ',model=%s' % self.nicmodel
@@ -171,8 +191,10 @@ class Net(Base):
         if self.name:
             x += ',name=%s' % self.name
         return [('-net', x)]
-
-    def args_vde(self, settings):
+    
+    @property
+    def args_vde(self):
+        settings = self.settings
         sockdir = settings and settings['qtubes.vde_socks'] or '/tmp'
         socket = self.vde.sock if path.isabs(self.vde.sock) else path.join(
             sockdir, self.vde.sock)
@@ -186,7 +208,8 @@ class Net(Base):
             x += ',name=%s' % self.name
         return [('-net', x)]
 
-    def args_tap(self, settings):
+    @property
+    def args_tap(self):
         x = 'tap,ifname=%s' % self.ifname
         if self.vlan != None:
             x += ',vlan=%d' % self.vlan
@@ -202,7 +225,7 @@ class Net(Base):
             x += ',downscript=no'
         return [('-net', x)]
 
-class Machine(Base):
+class Machine(Base, PathConfig):
     __tablename__ = 'machines'
     id = Column(Integer, primary_key=True)
     name = Column(Text, unique=True, nullable=False)
@@ -222,16 +245,17 @@ class Machine(Base):
 #                or_(NetNIC.id == id, NetVDE.id == id, NetTap.id == id)))
 
     def flatten(self, lst):
+        """ Flatten a shallow iterable of iterables """
         return [i for subi in lst for i in subi]
 
-    def args(self, settings):
-        qemu = settings and settings['qtubes.qemubin'] or 'qemu'
-        piddir = settings and settings['qtubes.pid_dir'] or '/tmp'
+    @property
+    def args(self):
+        qemu = self.settings and self.settings['qtubes.qemubin'] or 'qemu'
         a = [(qemu,),
              ('-vnc', ':%d' % self.vncport),
              ('-monitor', 'telnet::%d,server,nowait' % self.conport),
              ('-name', '%s' % self.name),
-             ('-pidfile', path.join(piddir, '%d.pid' % self.id)),
+             ('-pidfile', self.pidfile),
              ('-daemonize',),
              ]
         if self.mem:
@@ -242,17 +266,59 @@ class Machine(Base):
             a.extend([('-M', '%s' % self.machtype)])
         if not self.netnone:
             for n in self.nets:
-                a.extend(n.args(settings))
+                n.configure(self.settings)
+                a.extend(n.args)
         for d in self.drives:
-            a.extend(d.args(settings))
+            d.configure(self.settings)
+            a.extend(d.args)
         return a
 
-    def cmdline(self, settings):
+    @property
+    def cmdline(self):
         cmd = []
-        for x in self.args(settings):
+        for x in self.args:
             cmd.append(' '.join(x))
         return '  '.join(cmd)
+
+    @property
+    def pidfile(self):
+        """ Return the PID file for this machine """
+        piddir = self.settings and self.settings['qtubes.pid_dir'] or '/tmp'
+        return path.join(piddir, '%d.pid' % self.id)
         
+    @property
+    def pid(self):
+        """ Return PID for this machine, if PID file exists else None """
+        try:
+            with open(self.pidfile) as f:
+                return f.read().strip()
+        except IOError:
+            return None
+
+    @property
+    def running(self):
+        """ Return True if we think the process for this machine is
+            currently active
+        """
+        if not self.pid: # Should be okay, PID should never be 0
+            return False
+        try:
+            os.kill(self.pid, 0)
+        except OSError:
+            #FIXME: Unlink any stale PID file here?
+            return False
+        return True
+
+    def launch(self):
+        """ Launch this machine instance if not already running """
+        if self.running:
+            #FIXME: LOG or raise exception here?
+            return
+        args = self.flatten(self.args)
+        print "#$#$#$#$#$#$#",args
+        retval = subprocess.call(args)
+        print "RETVAL == ",retval
+
     def __str__(self):
         return self.cmdline(None)
     
