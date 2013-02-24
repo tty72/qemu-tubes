@@ -24,7 +24,17 @@ from sqlalchemy.orm import (
 from zope.sqlalchemy import ZopeTransactionExtension
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
-Base = declarative_base()
+
+class ConfiguredBase(object):
+    def __init__(self, config=None, *args, **kw):
+        super(ConfiguredBase, self).__init__(*args, **kw)
+        self.config = config
+
+    def flatten(self, lst):
+        return [i for subi in lst for i in subi]
+
+
+Base = declarative_base(cls=ConfiguredBase)
 Base.query = DBSession.query_property()
 
 DRIVE_IFS = ('ide', 'scsi', 'sd', 'mtd', 'floppy', 'pflash', 'virtio',)
@@ -118,7 +128,7 @@ class Drive(Base):
             x += ',aio=%s' % self.aio
         if self.ser:
             x +=  ',serial=%s' % self.ser
-        return ['-drive', x]
+        return [('-drive', x)]
 
 class Net(Base):
     __tablename__ = 'nets'
@@ -166,7 +176,7 @@ class Net(Base):
             x += ',macaddr=%s' %self.macaddr
         if self.name:
             x += ',name="%s"' % self.name
-        return ['-net', x]
+        return [('-net', x)]
 
     @property
     def args_vde(self):
@@ -178,7 +188,7 @@ class Net(Base):
             x += ',vlan=%d' % self.vlan
         if self.name:
             x += ',name="%s"' % self.name
-        return ['-net', x]
+        return [('-net', x)]
 
     @property
     def args_tap(self):
@@ -195,7 +205,7 @@ class Net(Base):
             x += ',downscript="%s"' % self.downscript
         else:
             x += ',downscript=no'
-        return ['-net', x]
+        return [('-net', x)]
 
 class Machine(Base):
     __tablename__ = 'machines'
@@ -218,18 +228,18 @@ class Machine(Base):
 
     @property
     def args(self):
-        a = ['-vnc', ':%d' % self.vncport,
-             '-monitor', 'telnet::%d,server,nowait' % self.conport,
-             '-name', '"%s"' % self.name,
-             '-pidfile', '/var/run/qemu/%d.pid' % self.id,
-             '-daemon',
+        a = [('-vnc', ':%d' % self.vncport),
+             ('-monitor', 'telnet::%d,server,nowait' % self.conport),
+             ('-name', '%s' % self.name),
+             ('-pidfile', '/tmp/%d.pid' % self.id),
+             ('-daemonize',),
              ]
         if self.mem:
-            a.extend(['-m', '%s' % self.mem])
+            a.extend([('-m', '%s' % self.mem)])
         if self.cpu:
-            a.extend(['-cpu', '%s' % self.cpu])
+            a.extend([('-cpu', '%s' % self.cpu)])
         if self.machtype:
-            a.extend(['-M', '%s' % self.machtype])
+            a.extend([('-M', '%s' % self.machtype)])
         if not self.netnone:
             for n in self.nets:
                 a.extend(n.args)
@@ -239,7 +249,10 @@ class Machine(Base):
 
     @property
     def cmdline(self):
-        return '  '.join(self.args)
+        cmd = []
+        for x in self.args:
+            cmd.append(' '.join(x))
+        return '  '.join(cmd)
         
     def __str__(self):
         return self.cmdline
