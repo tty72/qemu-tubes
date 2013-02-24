@@ -1,3 +1,4 @@
+import os.path as path
 from sqlalchemy import (
     Column,
     Integer,
@@ -25,16 +26,7 @@ from zope.sqlalchemy import ZopeTransactionExtension
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 
-class ConfiguredBase(object):
-    def __init__(self, config=None, *args, **kw):
-        super(ConfiguredBase, self).__init__(*args, **kw)
-        self.config = config
-
-    def flatten(self, lst):
-        return [i for subi in lst for i in subi]
-
-
-Base = declarative_base(cls=ConfiguredBase)
+Base = declarative_base()
 Base.query = DBSession.query_property()
 
 DRIVE_IFS = ('ide', 'scsi', 'sd', 'mtd', 'floppy', 'pflash', 'virtio',)
@@ -103,10 +95,12 @@ class Drive(Base):
     #machine = relationship('Machine')
     __table_args__ = (UniqueConstraint('ind','machine_id'),)
 
-    @property
-    def args(self):
+    def args(self, settings):
+        imgdir = settings and settings['qtubes.image_dir'] or '/tmp'
+        filepath = self.filepath if path.isabs(self.filepath) else path.join(
+            imgdir, self.filepath)
         #FIXME: Double commas in file names where applicable
-        x = 'file=%s,media=%s,if=%s' % (self.filepath,
+        x = 'file=%s,media=%s,if=%s' % (filepath,
                                         self.media,
                                         self.interface,
                                         )
@@ -120,6 +114,8 @@ class Drive(Base):
                                                 self.secs,)
         if self.trans:
             x += ',trans=%d' % self.trans
+        if self.ind != None:
+            x += ',index=%d' % self.ind
         if self.snapshot != None:
             x += ',snapshot=%s' % ('on' if self.snapshot else 'off')
         if self.cache:
@@ -150,14 +146,13 @@ class Net(Base):
 
     vde = relationship('VDE')
 
-    @property
-    def args(self):
+    def args(self, settings):
         if self.ntype == 'nic':
-            return self.args_nic
+            return self.args_nic(settings)
         elif self.ntype == 'vde':
-            return self.args_vde
+            return self.args_vde(settings)
         elif self.ntype == 'tap':
-            return self.args_tap
+            return self.args_tap(settings)
         elif self.ntype == 'user':
             raise NotImplementedError
         elif self.ntype == 'socket':
@@ -165,8 +160,7 @@ class Net(Base):
         elif self.type == 'dump':
             raise NotImplementedError
             
-    @property
-    def args_nic(self):
+    def args_nic(self, settings):
         x = 'nic'
         if self.nicmodel:
             x += ',model=%s' % self.nicmodel
@@ -175,34 +169,35 @@ class Net(Base):
         if self.macaddr:
             x += ',macaddr=%s' %self.macaddr
         if self.name:
-            x += ',name="%s"' % self.name
+            x += ',name=%s' % self.name
         return [('-net', x)]
 
-    @property
-    def args_vde(self):
+    def args_vde(self, settings):
+        sockdir = settings and settings['qtubes.vde_socks'] or '/tmp'
+        socket = self.vde.sock if path.isabs(self.vde.sock) else path.join(
+            sockdir, self.vde.sock)
         x = 'vde'
-        x += ',sock="%s"' % self.vde.sock
+        x += ',sock=%s' % socket
         if self.port:
-            x += ',port=%d' % self.port
+            x += ',port=%d' % self.port 
         if self.vlan != None:
             x += ',vlan=%d' % self.vlan
         if self.name:
-            x += ',name="%s"' % self.name
+            x += ',name=%s' % self.name
         return [('-net', x)]
 
-    @property
-    def args_tap(self):
+    def args_tap(self, settings):
         x = 'tap,ifname=%s' % self.ifname
         if self.vlan != None:
             x += ',vlan=%d' % self.vlan
         if self.name:
-            x += ',name="%s"' % self.name
+            x += ',name=%s' % self.name
         if self.script:
-            x += ',script="%s"' % self.script
+            x += ',script=%s' % self.script
         else:
             x += ',script=no'
         if self.downscript:
-            x += ',downscript="%s"' % self.downscript
+            x += ',downscript=%s' % self.downscript
         else:
             x += ',downscript=no'
         return [('-net', x)]
@@ -226,12 +221,17 @@ class Machine(Base):
 #                         func.count(NetTap.id)]).where(
 #                or_(NetNIC.id == id, NetVDE.id == id, NetTap.id == id)))
 
-    @property
-    def args(self):
-        a = [('-vnc', ':%d' % self.vncport),
+    def flatten(self, lst):
+        return [i for subi in lst for i in subi]
+
+    def args(self, settings):
+        qemu = settings and settings['qtubes.qemubin'] or 'qemu'
+        piddir = settings and settings['qtubes.pid_dir'] or '/tmp'
+        a = [(qemu,),
+             ('-vnc', ':%d' % self.vncport),
              ('-monitor', 'telnet::%d,server,nowait' % self.conport),
              ('-name', '%s' % self.name),
-             ('-pidfile', '/tmp/%d.pid' % self.id),
+             ('-pidfile', path.join(piddir, '%d.pid' % self.id)),
              ('-daemonize',),
              ]
         if self.mem:
@@ -242,18 +242,17 @@ class Machine(Base):
             a.extend([('-M', '%s' % self.machtype)])
         if not self.netnone:
             for n in self.nets:
-                a.extend(n.args)
+                a.extend(n.args(settings))
         for d in self.drives:
-            a.extend(d.args)
+            a.extend(d.args(settings))
         return a
 
-    @property
-    def cmdline(self):
+    def cmdline(self, settings):
         cmd = []
-        for x in self.args:
+        for x in self.args(settings):
             cmd.append(' '.join(x))
         return '  '.join(cmd)
         
     def __str__(self):
-        return self.cmdline
+        return self.cmdline(None)
     

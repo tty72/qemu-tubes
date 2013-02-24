@@ -71,14 +71,16 @@ class MachineView(ViewClass):
         """ View Drive and Net* grids for an individual Machine
         Requires request.params['id'] points to a valid Machine id
         """
-        m = DBSession.query(Machine).filter(
-            Machine.id==self.request.params['id']).first()
+#        m = DBSession.query(Machine).filter(
+#            Machine.id==self.request.params['id']).first()
+        m = Machine.query.filter(Machine.id==self.request.params['id']).first()
         dwidget = qemutubes.widgets.DriveGrid.req()
         dwidget.options['url'] = '/json/drivegrid?mac_id=%d' % m.id
         nwidget = qemutubes.widgets.NetGrid.req()
         nwidget.options['url'] = '/json/netgrid?mac_id=%d' % m.id
         return {'drivegrid': dwidget, 'netgrid': nwidget, 'machine': m,
-                'cmdline': m.cmdline.replace('  ',' \\\n')}
+                'cmdline': m.cmdline(self.request.registry.settings)
+                .replace('  ',' \\\n')}
 
 class DriveView(ViewClass):
     """ Methods and views to manipulate a Drive model """
