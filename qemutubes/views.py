@@ -78,7 +78,7 @@ class MachineView(ViewClass):
         nwidget = qemutubes.widgets.NetGrid.req()
         nwidget.options['url'] = '/json/netgrid?mac_id=%d' % m.id
         return {'drivegrid': dwidget, 'netgrid': nwidget, 'machine': m,
-                'cmdline': m.cmdline}
+                'cmdline': m.cmdline.replace('  ',' \\\n')}
 
 class DriveView(ViewClass):
     """ Methods and views to manipulate a Drive model """
