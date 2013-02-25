@@ -1,10 +1,14 @@
 import os
-
+import sys
 from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.rst')).read()
+
+if sys.version_info < (2, 7, 0):
+    sys.stderr.write("QTubes requires Python 2.7 or newer.\n")
+    sys.exit(-1)
 
 requires = [
     'pyramid',
@@ -27,7 +31,7 @@ setup(name='QemuTubes',
       description='QemuTubes',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
-        "Programming Language :: Python",
+        "Programming Language :: Python :: 2.7",
         "Framework :: Pyramid",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
