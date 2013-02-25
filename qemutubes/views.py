@@ -71,15 +71,29 @@ class MachineView(ViewClass):
         """ View Drive and Net* grids for an individual Machine
         Requires request.params['id'] points to a valid Machine id
         """
-        m = DBSession.query(Machine).filter(
-            Machine.id==self.request.params['id']).first()
+#        m = DBSession.query(Machine).filter(
+#            Machine.id==self.request.params['id']).first()
+        m = Machine.query.filter(Machine.id==self.request.params['id']).first()
+        m.configure(self.request.registry.settings)
         dwidget = qemutubes.widgets.DriveGrid.req()
         dwidget.options['url'] = '/json/drivegrid?mac_id=%d' % m.id
         nwidget = qemutubes.widgets.NetGrid.req()
         nwidget.options['url'] = '/json/netgrid?mac_id=%d' % m.id
         return {'drivegrid': dwidget, 'netgrid': nwidget, 'machine': m,
-                'cmdline': m.cmdline}
+                'cmdline': m.cmdline.replace('  ',' \\\n')}
 
+    @view_config(route_name='machine_launch') 
+    def launch(self):
+        """ Launch machine
+        Requires request.params['id'] points to a valid Machine id
+        """
+        mid = self.request.params['id']
+        m = Machine.query.filter(Machine.id==mid).first()
+        (retcode, output) = m.launch()
+        if retcode != 0:
+            self.request.session.flash('Launch failed: '+output)
+        return HTTPFound(location='/')
+        
 class DriveView(ViewClass):
     """ Methods and views to manipulate a Drive model """
 
@@ -242,4 +256,15 @@ class VDEView(ViewClass):
         VDE.query.filter(VDE.id==self.request.params['id']).delete()
         return Response("Ok")
 
+    @view_config(route_name='switch_launch') 
+    def launch(self):
+        """ Launch switch
+        Requires request.params['id'] points to a valid VDE id
+        """
+        vid = self.request.params['id']
+        v = VDE.query.filter(VDE.id==vid).first()
+        (retcode, output) = v.launch()
+        if retcode != 0:
+            self.request.session.flash('Launch failed: '+output)
+        return HTTPFound(location='/')
 

@@ -1,3 +1,6 @@
+import os
+path = os.path
+import subprocess
 from sqlalchemy import (
     Column,
     Integer,
@@ -24,6 +27,7 @@ from sqlalchemy.orm import (
 from zope.sqlalchemy import ZopeTransactionExtension
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
+
 Base = declarative_base()
 Base.query = DBSession.query_property()
 
@@ -33,7 +37,66 @@ CACHE_TYPES = ('writeback', 'none', 'unsafe', 'writethrough',)
 AIO_TYPES = ('native', 'threads')
 NET_TYPES = ('nic', 'vde', 'tap', 'user', 'socket', 'dump') 
 
-class CPUType(Base):
+class PathConfig(object):
+    def configure(self, settings):
+        """ Set various path configuration values
+        settings -- dictionary containing path settings (see development.ini)
+        """
+        self._settings = settings
+        
+    @property
+    def settings(self):
+        try:
+            return self._settings
+        except AttributeError:
+            return None
+
+class Launchable(object):
+    """ Mix-in for launchable models """
+    def flatten(self, lst):
+        """ Flatten a shallow iterable of iterables """
+        return [i for subi in lst for i in subi]
+
+    def launch(self):
+        """ Launch this machine instance if not already running """
+        if self.running:
+            #FIXME: LOG or raise exception here?
+            return (0, 'Already running')
+        args = self.flatten(self.args)
+        try:
+            subprocess.check_output(args, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError, e:
+            return (e.returncode, e.output)
+        return (0, 'Success')
+        
+    @property
+    def pidfile(self):
+        raise NotImplementedError
+
+    @property
+    def pid(self):
+        """ Return PID for this maunchable, if PID file exists else None """
+        try:
+            with open(self.pidfile) as f:
+                return int(f.read().strip())
+        except IOError:
+            return None
+
+    @property
+    def running(self):
+        """ Return True if we think the process for this launchable is
+            currently active
+        """
+        if not self.pid: # Should be okay, PID should never be 0
+            return False
+        try:
+            os.kill(self.pid, 0)
+        except OSError:
+            #FIXME: Unlink any stale PID file here?
+            return False
+        return True
+
+class CPUType(Base, PathConfig):
     __tablename__ = 'cpu_types'
     ctype = Column(Text, unique=True, primary_key=True)
     def __init__(self, ctype):
@@ -42,7 +105,7 @@ class CPUType(Base):
     def __str__(self):
         return self.ctype
 
-class MachineType(Base):
+class MachineType(Base, PathConfig):
     __tablename__ = 'machine_types'
     mtype = Column(Text, unique=True, primary_key=True)
     def __init__(self, mtype):
@@ -51,13 +114,13 @@ class MachineType(Base):
     def __str__(self):
         return self.mtype
 
-class NICType(Base):
+class NICType(Base, PathConfig):
     __tablename__ = 'nic_types'
     ntype = Column(Text, unique=True, primary_key=True)
     def __init__(self, ntype):
         self.ntype = ntype
 
-class VDE(Base):
+class VDE(Base, PathConfig, Launchable):
     __tablename__='vdes'
     id = Column(Integer, primary_key=True)
     name = Column(Text, unique=True)
@@ -72,7 +135,39 @@ class VDE(Base):
     fstp = Column(Boolean)
     macaddr = Column(Text)
 
-class Drive(Base):
+    @property
+    def pidfile(self):
+        """ Return the PID file for this switch """
+        piddir = self.settings and self.settings['qtubes.pid_dir'] or '/tmp'
+        return path.join(piddir, 'vde_%d.pid' % self.id)
+
+    @property
+    def sockfile(self):
+        """ Return the socket file path """
+        sockdir = self.settings and self.settings['qtubes.vde_socks'] or '/tmp'
+        sockpath = self.sock if path.isabs(self.sock) else path.join(
+            sockdir, self.sock)
+        return sockpath
+
+    @property
+    def mgmtfile(self):
+        """ Return the management socket file path """
+        sockdir = self.settings and self.settings['qtubes.vde_socks'] or '/tmp'
+        sockpath = self.mgmt if path.isabs(self.mgmt) else path.join(
+            sockdir, self.mgmt)
+        return sockpath
+
+    @property
+    def args(self):
+        vde = self.settings and self.settings['qtubes.vdeswitch'] or 'vde_switch'
+        args = [(vde, '-d'),
+                ('-p', self.pidfile),
+                ('-s', self.sockfile),
+                ('-M', self.mgmtfile),]
+        #FIXME: Handle other vde_switch options
+        return args
+
+class Drive(Base, PathConfig):
     __tablename__ = 'drives'
     id = Column(Integer, primary_key=True)
     machine_id = Column(Integer, ForeignKey('machines.id'))
@@ -95,8 +190,12 @@ class Drive(Base):
 
     @property
     def args(self):
+        settings = self.settings
+        imgdir = settings and settings['qtubes.image_dir'] or '/tmp'
+        filepath = self.filepath if path.isabs(self.filepath) else path.join(
+            imgdir, self.filepath)
         #FIXME: Double commas in file names where applicable
-        x = 'file=%s,media=%s,if=%s' % (self.filepath,
+        x = 'file=%s,media=%s,if=%s' % (filepath,
                                         self.media,
                                         self.interface,
                                         )
@@ -110,6 +209,8 @@ class Drive(Base):
                                                 self.secs,)
         if self.trans:
             x += ',trans=%d' % self.trans
+        if self.ind != None:
+            x += ',index=%d' % self.ind
         if self.snapshot != None:
             x += ',snapshot=%s' % ('on' if self.snapshot else 'off')
         if self.cache:
@@ -118,9 +219,9 @@ class Drive(Base):
             x += ',aio=%s' % self.aio
         if self.ser:
             x +=  ',serial=%s' % self.ser
-        return ['-drive', x]
+        return [('-drive', x)]
 
-class Net(Base):
+class Net(Base, PathConfig):
     __tablename__ = 'nets'
     id = Column(Integer, primary_key=True)
     machine_id = Column(Integer, ForeignKey('machines.id'))
@@ -165,20 +266,24 @@ class Net(Base):
         if self.macaddr:
             x += ',macaddr=%s' %self.macaddr
         if self.name:
-            x += ',name="%s"' % self.name
-        return ['-net', x]
-
+            x += ',name=%s' % self.name
+        return [('-net', x)]
+    
     @property
     def args_vde(self):
+        settings = self.settings
+        sockdir = settings and settings['qtubes.vde_socks'] or '/tmp'
+        socket = self.vde.sock if path.isabs(self.vde.sock) else path.join(
+            sockdir, self.vde.sock)
         x = 'vde'
-        x += ',sock="%s"' % self.vde.sock
+        x += ',sock=%s' % socket
         if self.port:
-            x += ',port=%d' % self.port
+            x += ',port=%d' % self.port 
         if self.vlan != None:
             x += ',vlan=%d' % self.vlan
         if self.name:
-            x += ',name="%s"' % self.name
-        return ['-net', x]
+            x += ',name=%s' % self.name
+        return [('-net', x)]
 
     @property
     def args_tap(self):
@@ -186,18 +291,18 @@ class Net(Base):
         if self.vlan != None:
             x += ',vlan=%d' % self.vlan
         if self.name:
-            x += ',name="%s"' % self.name
+            x += ',name=%s' % self.name
         if self.script:
-            x += ',script="%s"' % self.script
+            x += ',script=%s' % self.script
         else:
             x += ',script=no'
         if self.downscript:
-            x += ',downscript="%s"' % self.downscript
+            x += ',downscript=%s' % self.downscript
         else:
             x += ',downscript=no'
-        return ['-net', x]
+        return [('-net', x)]
 
-class Machine(Base):
+class Machine(Base, PathConfig, Launchable):
     __tablename__ = 'machines'
     id = Column(Integer, primary_key=True)
     name = Column(Text, unique=True, nullable=False)
@@ -218,29 +323,42 @@ class Machine(Base):
 
     @property
     def args(self):
-        a = ['-vnc', ':%d' % self.vncport,
-             '-monitor', 'telnet::%d,server,nowait' % self.conport,
-             '-name', '"%s"' % self.name,
-             '-pidfile', '/var/run/qemu/%d.pid' % self.id,
-             '-daemon',
+        qemu = self.settings and self.settings['qtubes.qemubin'] or 'qemu'
+        a = [(qemu,),
+             ('-vnc', ':%d' % self.vncport),
+             ('-monitor', 'telnet::%d,server,nowait' % self.conport),
+             ('-name', '%s' % self.name),
+             ('-pidfile', self.pidfile),
+             ('-daemonize',),
              ]
         if self.mem:
-            a.extend(['-m', '%s' % self.mem])
+            a.extend([('-m', '%s' % self.mem)])
         if self.cpu:
-            a.extend(['-cpu', '%s' % self.cpu])
+            a.extend([('-cpu', '%s' % self.cpu)])
         if self.machtype:
-            a.extend(['-M', '%s' % self.machtype])
+            a.extend([('-M', '%s' % self.machtype)])
         if not self.netnone:
             for n in self.nets:
+                n.configure(self.settings)
                 a.extend(n.args)
         for d in self.drives:
+            d.configure(self.settings)
             a.extend(d.args)
         return a
 
     @property
     def cmdline(self):
-        return '  '.join(self.args)
+        cmd = []
+        for x in self.args:
+            cmd.append(' '.join(x))
+        return '  '.join(cmd)
+
+    @property
+    def pidfile(self):
+        """ Return the PID file for this machine """
+        piddir = self.settings and self.settings['qtubes.pid_dir'] or '/tmp'
+        return path.join(piddir, 'qemu_%d.pid' % self.id)
         
     def __str__(self):
-        return self.cmdline
+        return self.cmdline(None)
     
