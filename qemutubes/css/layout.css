@@ -63,3 +63,13 @@ div#content {
 #edit th,td {
     text-align: left;
 }
+
+#flash {
+    font-size: x-large;
+    color: #c00;
+    text-align: center;
+    margin: 4px auto 4px auto;
+    width: 60%;
+    background-color: #ffa;
+    border: 1px solid #000;
+}
