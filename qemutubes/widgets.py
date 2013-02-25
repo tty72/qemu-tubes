@@ -66,6 +66,14 @@ class MachineGrid(tw2.jqplugins.jqgrid.SQLAjqGridWidget):
             'title': 'Configure',
             'cursor': 'pointer'
         },
+        {
+            'caption': '',
+            'buttonicon': 'ui-icon-play',
+            'onClickButton': tw2.core.js_callback("LaunchMachine"),
+            'position': 'last',
+            'title': 'Launch',
+            'cursor': 'pointer'
+        },
         ]
     prmDel = {'url': '/machinedelete'}
 
@@ -74,7 +82,11 @@ class MachineGrid(tw2.jqplugins.jqgrid.SQLAjqGridWidget):
         edmac = tw2.core.JSSource(location='head',
                                   src="""function ViewMachine() { var row=$('#%s').jqGrid('getGridParam', 'selrow');; 
                                          window.location='/machineview?id=' + row }""" %self.selector)
+        launchmac = tw2.core.JSSource(location='head',
+                                      src="""function LaunchMachine() { var row=$('#%s').jqGrid('getGridParam', 'selrow');; 
+                                         window.location='/machinelaunch?id=' + row }""" %self.selector)
         self.resources.append(edmac)
+        self.resources.append(launchmac)
 
 class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     id = 'drive_grid'

@@ -82,6 +82,18 @@ class MachineView(ViewClass):
         return {'drivegrid': dwidget, 'netgrid': nwidget, 'machine': m,
                 'cmdline': m.cmdline.replace('  ',' \\\n')}
 
+    @view_config(route_name='machine_launch') 
+    def launch(self):
+        """ Launch machine
+        Requires request.params['id'] points to a valid Machine id
+        """
+        mid = self.request.params['id']
+        m = Machine.query.filter(Machine.id==mid).first()
+        (retcode, output) = m.launch()
+        if retcode != 0:
+            self.request.session.flash('Launch failed: '+output)
+        return HTTPFound(location='/')
+        
 class DriveView(ViewClass):
     """ Methods and views to manipulate a Drive model """
 

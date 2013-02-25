@@ -291,7 +291,7 @@ class Machine(Base, PathConfig):
         """ Return PID for this machine, if PID file exists else None """
         try:
             with open(self.pidfile) as f:
-                return f.read().strip()
+                return int(f.read().strip())
         except IOError:
             return None
 
@@ -313,12 +313,14 @@ class Machine(Base, PathConfig):
         """ Launch this machine instance if not already running """
         if self.running:
             #FIXME: LOG or raise exception here?
-            return
+            return (0, 'Already running')
         args = self.flatten(self.args)
-        print "#$#$#$#$#$#$#",args
-        retval = subprocess.call(args)
-        print "RETVAL == ",retval
-
+        try:
+            subprocess.check_output(args, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError, e:
+            return (e.returncode, e.output)
+        return (0, 'Success')
+        
     def __str__(self):
         return self.cmdline(None)
     
