@@ -234,7 +234,7 @@ class VDEView(ViewClass):
         vdes = DBSession.query(VDE).all()
         vlist = [{ 'id': x.id, 'cell': [x.name, x.sock, x.mgmt,
                 x.tap, x.mode, x.group, x.rcfile, x.ports,
-                x.hub, x.fstp, x.macaddr,]} for x in vdes]
+                x.hub, x.fstp, x.macaddr, x.running]} for x in vdes]
         res = { 'total': 1, 'page': 1, 'records': len(vlist), 
                 'rows': vlist,}
         return res

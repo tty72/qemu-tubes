@@ -55,7 +55,7 @@ class MachineGrid(tw2.jqplugins.jqgrid.jqGridWidget):
         'imgpath': 'scripts/jqGrid/themes/green/images',
         'width': 900,
         'height': 'auto',
-        'colNames': ['Name', 'CPU', 'Type', 'Memory', 'VNC Port', 'Console', 'Network', 'Running'],
+        'colNames': ['Name', 'CPU', 'Type', 'Memory', 'VNC Port', 'Console', 'Network', 'Active'],
         'colModel': [
             { 'name': 'name', 'index': 'name', },
             { 'name': 'cpu', 'index': 'cpu', 'width': '100', 'align': 'center', },
@@ -197,7 +197,7 @@ class VDEGrid(tw2.jqplugins.jqgrid.jqGridWidget):
         'width': 900,
         'height': 'auto',
         'colNames': ['Name', 'Socket', 'Management', 'Tap', 'Perms', 'Group', 
-                    'RC File', 'Ports', 'Hub', 'FSTP', 'MacAddr'],
+                    'RC File', 'Ports', 'Hub', 'FSTP', 'MacAddr', 'Active'],
         'colModel': [
             { 'name': 'name', 'index': 'filepath', },
             { 'name': 'sock', 'index': 'interface', 'width': '100', 'align': 'center', },
@@ -210,6 +210,7 @@ class VDEGrid(tw2.jqplugins.jqgrid.jqGridWidget):
             { 'name': 'hub', 'width': '80', 'align': 'center', },
             { 'name': 'fstp', 'width': '80', 'align': 'center', },
             { 'name': 'macaddr', 'width': '80', 'align': 'center', },
+            { 'name': 'running', 'width': '80', 'align': 'center', },
             ]
                     
     }
