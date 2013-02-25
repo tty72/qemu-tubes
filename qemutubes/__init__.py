@@ -21,6 +21,7 @@ def main(global_config, **settings):
     config.add_static_view('css', 'css', cache_max_age=3600)
     #config.add_route('home', '/')
     config.add_route('main', '/')
+    config.add_route('machine_grid', '/json/machinegrid')
     config.add_route('machine_edit', '/machineedit')
     config.add_route('machine_delete', '/machinedelete')
     config.add_route('machine_view', '/machineview')

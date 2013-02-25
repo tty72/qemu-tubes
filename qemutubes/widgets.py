@@ -37,18 +37,17 @@ class DBForm(object):
         """ Wrapper for tw2.sqla.utils update_or_create() """
         sautil.update_or_create(cls.entity, data)
 
-class MachineGrid(tw2.jqplugins.jqgrid.SQLAjqGridWidget):
+class MachineGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     id = 'machine_grid'
-    entity = model.Machine
-    #FIXME: Including Nets and Drives breaks SQLAjqGridWidget
-    excluded_columns = ['id', 'drives', 'nets',]
     pager_options = { "search" : True, "refresh" : True, "add" : True, 
                       "addfunc":tw2.core.js_callback("function(){window.location='/machineedit'}"), 
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/machineedit?id=' + row_id}"),
                       }
     options = {
         'pager': 'module-machine-demo_pager',
-        'url': '/tw2_controllers/db_jqgrid/',
+        'url': '/json/machinegrid',
+        'datatype': 'json',
+        'mtype': 'GET',
         'caption': 'Machines',
         'rowNum':15,
         'rowList':[15,30,50],
@@ -56,6 +55,17 @@ class MachineGrid(tw2.jqplugins.jqgrid.SQLAjqGridWidget):
         'imgpath': 'scripts/jqGrid/themes/green/images',
         'width': 900,
         'height': 'auto',
+        'colNames': ['Name', 'CPU', 'Type', 'Memory', 'VNC Port', 'Console', 'Network', 'Running'],
+        'colModel': [
+            { 'name': 'name', 'index': 'name', },
+            { 'name': 'cpu', 'index': 'cpu', 'width': '100', 'align': 'center', },
+            { 'name': 'machtype', 'width': '80', 'align': 'center', },
+            { 'name': 'mem', 'width': '60', 'align': 'center', },
+            { 'name': 'vncport', 'width': '60', 'align': 'center', },
+            { 'name': 'conport', 'width': '60', 'align': 'center', },
+            { 'name': 'netnone', 'width': '80', 'align': 'center', },
+            { 'name': 'running', 'width': '80', 'align': 'center', },
+            ],        
     }
     custom_pager_buttons = [
         {

@@ -33,6 +33,19 @@ class Main(ViewClass):
 
 class MachineView(ViewClass):
 
+    @view_config(route_name='machine_grid', renderer='json')
+    def grid(self):
+        """ Return JSON data for widget.MachineGrid request 
+        Requires request.params['mac-id'] points to a valid Machine id
+        """
+        machines = Machine.query.all()
+        mlist = [{ 'id': x.id, 'cell': [x.name, x.cpu, x.machtype,
+                x.mem, x.vncport, x.conport,
+                bool(True-x.netnone), x.running]} for x in machines]
+        res = { 'total': 1, 'page': 1, 'records': len(mlist), 
+                'rows': mlist}
+        return res
+
     @view_config(route_name='machine_edit', renderer='templates/edit.genshi')
     def edit(self):
         """ Begin editing a Machine or validate and store an edit
