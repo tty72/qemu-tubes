@@ -203,7 +203,25 @@ class VDEGrid(tw2.jqplugins.jqgrid.jqGridWidget):
             ]
                     
     }
+    custom_pager_buttons = [
+        {
+            'caption': '',
+            'buttonicon': 'ui-icon-play',
+            'onClickButton': tw2.core.js_callback("LaunchSwitch"),
+            'position': 'last',
+            'title': 'Launch',
+            'cursor': 'pointer'
+        },
+        ]
+    
     prmDel = {'url': '/vdedelete'}
+
+    def prepare(self):
+        super(VDEGrid, self).prepare()
+        launchswitch = tw2.core.JSSource(location='head',
+                                         src="""function LaunchSwitch() { var row=$('#%s').jqGrid('getGridParam', 'selrow');; 
+                                         window.location='/switchlaunch?id=' + row }""" %self.selector)
+        self.resources.append(launchswitch)
 
 class MachineForm(tw2.forms.TableForm, DBForm):
     entity = model.Machine

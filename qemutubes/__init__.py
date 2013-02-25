@@ -34,5 +34,6 @@ def main(global_config, **settings):
     config.add_route('vde_grid', '/json/vdegrid')
     config.add_route('vde_edit', '/vdeedit')
     config.add_route('vde_delete', '/vdedelete')
+    config.add_route('switch_launch', '/switchlaunch')
     config.scan()
     return config.make_wsgi_app()

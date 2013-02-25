@@ -256,4 +256,15 @@ class VDEView(ViewClass):
         VDE.query.filter(VDE.id==self.request.params['id']).delete()
         return Response("Ok")
 
+    @view_config(route_name='switch_launch') 
+    def launch(self):
+        """ Launch switch
+        Requires request.params['id'] points to a valid VDE id
+        """
+        vid = self.request.params['id']
+        v = VDE.query.filter(VDE.id==vid).first()
+        (retcode, output) = v.launch()
+        if retcode != 0:
+            self.request.session.flash('Launch failed: '+output)
+        return HTTPFound(location='/')
 

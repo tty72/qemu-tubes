@@ -51,6 +51,51 @@ class PathConfig(object):
         except AttributeError:
             return None
 
+class Launchable(object):
+    """ Mix-in for launchable models """
+    def flatten(self, lst):
+        """ Flatten a shallow iterable of iterables """
+        return [i for subi in lst for i in subi]
+
+    def launch(self):
+        """ Launch this machine instance if not already running """
+        if self.running:
+            #FIXME: LOG or raise exception here?
+            return (0, 'Already running')
+        args = self.flatten(self.args)
+        try:
+            subprocess.check_output(args, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError, e:
+            return (e.returncode, e.output)
+        return (0, 'Success')
+        
+    @property
+    def pidfile(self):
+        raise NotImplementedError
+
+    @property
+    def pid(self):
+        """ Return PID for this maunchable, if PID file exists else None """
+        try:
+            with open(self.pidfile) as f:
+                return int(f.read().strip())
+        except IOError:
+            return None
+
+    @property
+    def running(self):
+        """ Return True if we think the process for this launchable is
+            currently active
+        """
+        if not self.pid: # Should be okay, PID should never be 0
+            return False
+        try:
+            os.kill(self.pid, 0)
+        except OSError:
+            #FIXME: Unlink any stale PID file here?
+            return False
+        return True
+
 class CPUType(Base, PathConfig):
     __tablename__ = 'cpu_types'
     ctype = Column(Text, unique=True, primary_key=True)
@@ -75,7 +120,7 @@ class NICType(Base, PathConfig):
     def __init__(self, ntype):
         self.ntype = ntype
 
-class VDE(Base, PathConfig):
+class VDE(Base, PathConfig, Launchable):
     __tablename__='vdes'
     id = Column(Integer, primary_key=True)
     name = Column(Text, unique=True)
@@ -89,6 +134,38 @@ class VDE(Base, PathConfig):
     hub = Column(Boolean, default=False)
     fstp = Column(Boolean)
     macaddr = Column(Text)
+
+    @property
+    def pidfile(self):
+        """ Return the PID file for this switch """
+        piddir = self.settings and self.settings['qtubes.pid_dir'] or '/tmp'
+        return path.join(piddir, 'vde_%d.pid' % self.id)
+
+    @property
+    def sockfile(self):
+        """ Return the socket file path """
+        sockdir = self.settings and self.settings['qtubes.vde_socks'] or '/tmp'
+        sockpath = self.sock if path.isabs(self.sock) else path.join(
+            sockdir, self.sock)
+        return sockpath
+
+    @property
+    def mgmtfile(self):
+        """ Return the management socket file path """
+        sockdir = self.settings and self.settings['qtubes.vde_socks'] or '/tmp'
+        sockpath = self.mgmt if path.isabs(self.mgmt) else path.join(
+            sockdir, self.mgmt)
+        return sockpath
+
+    @property
+    def args(self):
+        vde = self.settings and self.settings['qtubes.vdeswitch'] or 'vde_switch'
+        args = [(vde, '-d'),
+                ('-p', self.pidfile),
+                ('-s', self.sockfile),
+                ('-M', self.mgmtfile),]
+        #FIXME: Handle other vde_switch options
+        return args
 
 class Drive(Base, PathConfig):
     __tablename__ = 'drives'
@@ -225,7 +302,7 @@ class Net(Base, PathConfig):
             x += ',downscript=no'
         return [('-net', x)]
 
-class Machine(Base, PathConfig):
+class Machine(Base, PathConfig, Launchable):
     __tablename__ = 'machines'
     id = Column(Integer, primary_key=True)
     name = Column(Text, unique=True, nullable=False)
@@ -243,10 +320,6 @@ class Machine(Base, PathConfig):
 #        select([func.count(NetNIC.id)+func.count(NetVDE.id)+
 #                         func.count(NetTap.id)]).where(
 #                or_(NetNIC.id == id, NetVDE.id == id, NetTap.id == id)))
-
-    def flatten(self, lst):
-        """ Flatten a shallow iterable of iterables """
-        return [i for subi in lst for i in subi]
 
     @property
     def args(self):
@@ -284,42 +357,7 @@ class Machine(Base, PathConfig):
     def pidfile(self):
         """ Return the PID file for this machine """
         piddir = self.settings and self.settings['qtubes.pid_dir'] or '/tmp'
-        return path.join(piddir, '%d.pid' % self.id)
-        
-    @property
-    def pid(self):
-        """ Return PID for this machine, if PID file exists else None """
-        try:
-            with open(self.pidfile) as f:
-                return int(f.read().strip())
-        except IOError:
-            return None
-
-    @property
-    def running(self):
-        """ Return True if we think the process for this machine is
-            currently active
-        """
-        if not self.pid: # Should be okay, PID should never be 0
-            return False
-        try:
-            os.kill(self.pid, 0)
-        except OSError:
-            #FIXME: Unlink any stale PID file here?
-            return False
-        return True
-
-    def launch(self):
-        """ Launch this machine instance if not already running """
-        if self.running:
-            #FIXME: LOG or raise exception here?
-            return (0, 'Already running')
-        args = self.flatten(self.args)
-        try:
-            subprocess.check_output(args, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError, e:
-            return (e.returncode, e.output)
-        return (0, 'Success')
+        return path.join(piddir, 'qemu_%d.pid' % self.id)
         
     def __str__(self):
         return self.cmdline(None)
