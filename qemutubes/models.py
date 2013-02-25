@@ -61,10 +61,11 @@ class Launchable(object):
         """ Launch this machine instance if not already running """
         if self.running:
             #FIXME: LOG or raise exception here?
-            return (0, 'Already running')
+            return (-254, 'Already running')
         args = self.flatten(self.args)
         try:
-            subprocess.check_output(args, stderr=subprocess.STDOUT)
+            subprocess.check_output(args, stderr=subprocess.STDOUT, 
+                                    close_fds=True)
         except subprocess.CalledProcessError, e:
             return (e.returncode, e.output)
         return (0, 'Success')
@@ -75,7 +76,7 @@ class Launchable(object):
 
     @property
     def pid(self):
-        """ Return PID for this maunchable, if PID file exists else None """
+        """ Return PID for this launchable, if PID file exists else None """
         try:
             with open(self.pidfile) as f:
                 return int(f.read().strip())
