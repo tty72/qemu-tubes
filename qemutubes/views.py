@@ -60,11 +60,10 @@ class ViewClass(object):
             reverse = False if order == 'asc' else True
             elist.sort(key=lambda x: x['cell'][self.enum_props.index(sortcol)],
                        reverse=reverse)
-        print "###$$$### HERE"
+
         return {'total': total_pages, 'page': offset, 'records': len(elist),
                 'rows': elist}
                 
-            
 class Main(ViewClass):
 
     @view_config(route_name='main', 
