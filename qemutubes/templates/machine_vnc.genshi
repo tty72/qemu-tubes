@@ -12,7 +12,7 @@
       <applet archive="/static/applet/tightvnc-jviewer.jar"
 	      code="com.glavsoft.viewer.Viewer"
 	      width="1" height="1">
-	<param name="Port" value="5900" /> 
+	<param name="Port" value="${int(machine.vncport)+5900}" /> 
       </applet>
     </div>
   </body>
