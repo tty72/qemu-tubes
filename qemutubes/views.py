@@ -44,7 +44,8 @@ class ViewClass(object):
         total_pages = total_rows / count if count else 1
         rows = self.entity.query
         if filter:
-            rows.filter(filter)
+            print "###$$### FILTERING ON: ",filter
+            rows = filter
         if sort_sql and sortcol:
             rows = rows.order_by(sortcol+' '+order)
         if count:
@@ -170,7 +171,7 @@ class DriveView(ViewClass):
         if mac == None:
             return []
         return super(DriveView, self).grid(
-            filter=Drive.query.filter(Drive.id==mac))
+            filter=Drive.query.filter(Drive.machine_id==mac))
 
     @view_config(route_name='drive_edit', renderer='templates/edit.genshi')
     def edit(self):
@@ -225,7 +226,7 @@ class NetView(ViewClass):
         mac = self.request.params.get('mac_id', None)
         if mac == None:
             return []
-        return super(NetView, self).grid(filter=Net.query.filter(Net.id==mac))
+        return super(NetView, self).grid(filter=Net.query.filter(Net.machine_id==mac))
 
     @view_config(route_name='net_edit', renderer='templates/edit.genshi')
     def edit(self):
