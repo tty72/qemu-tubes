@@ -14,6 +14,9 @@
     <div>
       ${netgrid.display()}
     </div>
+    <ul>
+      <li><a href="/machinevnc?id=${machine.id}">VNC viewer</a></li>
+    </ul>
     <h3 class="cmdline">${cmdline}</h3>
   </body>
 </html>

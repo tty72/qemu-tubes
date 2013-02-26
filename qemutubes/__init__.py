@@ -26,6 +26,7 @@ def main(global_config, **settings):
     config.add_route('machine_delete', '/machinedelete')
     config.add_route('machine_view', '/machineview')
     config.add_route('machine_launch', '/machinelaunch')
+    config.add_route('machine_vnc', '/machinevnc')
     config.add_route('drive_grid', '/json/drivegrid')
     config.add_route('drive_edit', '/driveedit')
     config.add_route('drive_delete', '/drivedelete')
