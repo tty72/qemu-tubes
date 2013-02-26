@@ -15,7 +15,9 @@
     <body py:attrs="select('@*')"><div id="wrap">
 	<div id="wrapper">
 	  <div id="header">
-	    <img src="/static/qtubes.png" />
+	    <a href="/">
+	      <img src="/static/qtubes.png" />
+	    </a>
 	  </div>
 	  <div id="flash" py:if='request.session.peek_flash()'>
 	    <span py:replace="request.session.pop_flash()">OK</span>
