@@ -7,7 +7,7 @@ import sqlalchemy as sa
 from tw2.sqla import utils as sautil
 
 def list_vdes():
-    return [vde.name for vde in model.VDE.query.all()]
+    return [(vde.id, vde.name) for vde in model.VDE.query.all()]
 
 def list_cputypes():
     return [cpu.ctype for cpu in model.CPUType.query.all()]
@@ -34,7 +34,7 @@ class DBForm(object):
 
     @classmethod
     def insert_or_update(cls, data):
-        """ Wrapper for tw2.sqla.utils update_or_create() """
+        """ Wrapper for tw2.sqla.utils update_or_create() """ 
         sautil.update_or_create(cls.entity, data)
 
 class MachineGrid(tw2.jqplugins.jqgrid.jqGridWidget):
@@ -104,7 +104,7 @@ class MachineGrid(tw2.jqplugins.jqgrid.jqGridWidget):
 class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     id = 'drive_grid'
     pager_options = { "search" : True, "refresh" : True, "add" : True, 
-                      "addfunc":tw2.core.js_callback("function(){window.location='/driveedit?machine_id=' + GetMac()}"), 
+                      "addfunc":tw2.core.js_callback("function(){window.location='/driveedit?machine_id=' + GetDriveMac()}"), 
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/driveedit?id=' + row_id }"),
                       }
     options = {
@@ -141,13 +141,13 @@ class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     def prepare(self):
         super(DriveGrid, self).prepare()
         edmac = tw2.core.JSSource(location='head',
-                                  src="""function GetMac() { return $('#%s').jqGrid('getGridParam', 'userData'); }""" %self.selector)
+                                  src="""function GetDriveMac() { return $('#%s').jqGrid('getGridParam', 'userData'); }""" %self.selector)
         self.resources.append(edmac)
 
 class NetGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     id = 'net_grid'
     pager_options = { "search" : True, "refresh" : True, "add" : True, 
-                      "addfunc":tw2.core.js_callback("function(){window.location='/netedit?machine_id=' + GetMac()}"), 
+                      "addfunc":tw2.core.js_callback("function(){window.location='/netedit?machine_id=' + GetNetMac()}"), 
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/netedit?id=' + row_id }"),
                       }
     options = {
@@ -180,7 +180,7 @@ class NetGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     def prepare(self):
         super(NetGrid, self).prepare()
         edmac = tw2.core.JSSource(location='head',
-                                  src="""function GetMac() { return $('#%s').jqGrid('getGridParam', 'userData'); }""" %self.selector)
+                                  src="""function GetNetMac() { return $('#%s').jqGrid('getGridParam', 'userData'); }""" %self.selector)
         self.resources.append(edmac)
 
 class VDEGrid(tw2.jqplugins.jqgrid.jqGridWidget):
@@ -285,8 +285,8 @@ class DriveForm(tw2.forms.TableForm, DBForm):
 
 class NetForm(tw2.forms.TableForm, DBForm):
     entity = model.Net
-    id = tw2.forms.HiddenField()
-    machine_id = tw2.forms.HiddenField()
+    id = tw2.forms.HiddenField(validator=tw2.core.IntValidator)
+    machine_id = tw2.forms.HiddenField(validator=tw2.core.IntValidator)
     name = tw2.forms.TextField(validator=tw2.core.Required)
     ntype = tw2.forms.SingleSelectField(
         options=model.NET_TYPES,
@@ -294,7 +294,7 @@ class NetForm(tw2.forms.TableForm, DBForm):
     vlan = tw2.forms.TextField(validator=tw2.core.IntValidator)
     nicmodel = tw2.forms.SingleSelectField(options=list_nictypes())
     macaddr = tw2.forms.TextField()
-    vde = tw2.forms.SingleSelectField(options=list_vdes())
+    vde_id = tw2.forms.SingleSelectField(options=list_vdes())
     port = tw2.forms.TextField(validator=tw2.core.IntValidator)
     script = tw2.forms.TextField()
     downscript = tw2.forms.TextField()
@@ -303,7 +303,7 @@ class NetForm(tw2.forms.TableForm, DBForm):
 
     def prepare(self):
         super(NetForm, self).prepare()
-        self.child.c.vde.options = list_vdes()
+        self.child.c.vde_id.options = list_vdes()
         self.child.c.nicmodel.options = list_nictypes()
 
 class VDEForm(tw2.forms.TableForm, DBForm):

@@ -135,6 +135,7 @@ class VDE(Base, PathConfig, Launchable):
     hub = Column(Boolean, default=False)
     fstp = Column(Boolean)
     macaddr = Column(Text)
+    nets = relationship('Net', backref='vde')
 
     @property
     def pidfile(self):
@@ -240,7 +241,7 @@ class Net(Base, PathConfig):
     downscript = Column(Text)
     ifname = Column(Text)
 
-    vde = relationship('VDE')
+#    vde = relationship('VDE')
 
     @property
     def args(self):
