@@ -13,18 +13,20 @@
 
   <py:match path="body" once="true">
     <body py:attrs="select('@*')"><div id="wrap">
-      <div id="header">
-	
-      </div>
-      <div id="flash" py:if='request.session.peek_flash()'>
-	<span py:replace="request.session.pop_flash()">OK</span>
-      </div>
-      <div id="content">
-        ${select('*|text()')}
-      </div>
-      <div id="footer">
-        <p class="legalese">QemuTubes is Free Software released under the GNU/GPL License</p>
-      </div>
+	<div id="wrapper">
+	  <div id="header">
+	    <img src="/static/qtubes.png" />
+	  </div>
+	  <div id="flash" py:if='request.session.peek_flash()'>
+	    <span py:replace="request.session.pop_flash()">OK</span>
+	  </div>
+	  <div id="content">
+            ${select('*|text()')}
+	  </div>
+	  <div id="footer">
+            <p class="legalese">QemuTubes is Free Software released under the GNU/GPL License</p>
+	  </div>
+	</div>
     </div></body>
   </py:match>
 
