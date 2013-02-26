@@ -9,14 +9,11 @@
   <body class="submit">
     <h1> Machine: ${machine.name} </h1>
     <div>
-      ${drivegrid.display()}
+      <applet archive="/static/applet/tightvnc-jviewer.jar"
+	      code="com.glavsoft.viewer.Viewer"
+	      width="1" height="1">
+	<param name="Port" value="5900" /> 
+      </applet>
     </div>
-    <div>
-      ${netgrid.display()}
-    </div>
-    <ul>
-      <li><a href="/machinevnc?id=${machine.id}">VNC viewer</a></li>
-    </ul>
-    <h3 class="cmdline">${cmdline}</h3>
   </body>
 </html>

@@ -147,7 +147,14 @@ class MachineView(ViewClass):
         if retcode != 0:
             self.request.session.flash('Launch failed: '+output)
         return HTTPFound(location='/')
-        
+
+    @view_config(route_name='machine_vnc', renderer='templates/machine_vnc.genshi') 
+    def vnc(self):
+        """ Launch machine VNC viewer """
+        mid = self.request.params['id']
+        m = Machine.query.filter(Machine.id==mid).first()
+        return {'machine': m}
+
 class DriveView(ViewClass):
     """ Methods and views to manipulate a Drive model """
     entity = Drive
