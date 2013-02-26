@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xmlns:py="http://genshi.edgewall.org/">
+  <xi:include href="master.genshi" />
+  <head>
+    <title>Machine View</title>
+  </head>
+  <body class="submit">
+    <h1> Machine: ${machine.name} </h1>
+    <div>
+      <applet archive="/static/applet/tightvnc-jviewer.jar"
+	      code="com.glavsoft.viewer.Viewer"
+	      width="1" height="1">
+	<param name="Port" value="5900" /> 
+      </applet>
+    </div>
+  </body>
+</html>
