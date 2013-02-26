@@ -63,8 +63,10 @@ class MachineGrid(tw2.jqplugins.jqgrid.jqGridWidget):
             { 'name': 'mem', 'width': '60', 'align': 'center', },
             { 'name': 'vncport', 'width': '60', 'align': 'center', },
             { 'name': 'conport', 'width': '60', 'align': 'center', },
-            { 'name': 'netnone', 'width': '80', 'align': 'center', },
-            { 'name': 'running', 'width': '80', 'align': 'center', },
+            { 'name': 'netnone', 'width': '80', 'align': 'center', 
+              'formatter': 'checkbox', },
+            { 'name': 'running', 'width': '80', 'align': 'center',
+              'formatter': 'checkbox', },
             ],        
     }
     custom_pager_buttons = [
@@ -120,12 +122,14 @@ class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
                     'Snapshot', 'Cache', 'AIO', 'Serial'],
         'colModel': [
             { 'name': 'filepath', 'index': 'filepath', },
-            { 'name': 'interface', 'index': 'interface', 'width': '100', 'align': 'center', },
+            { 'name': 'interface', 'index': 'interface', 'width': '100', 
+              'align': 'center', },
             { 'name': 'media', 'width': '80', 'align': 'center', },
             { 'name': 'bus', 'width': '60', 'align': 'center', },
             { 'name': 'unit', 'width': '60', 'align': 'center', },
             { 'name': 'ind', 'width': '60', 'align': 'center', },
-            { 'name': 'snapshot', 'width': '80', 'align': 'center', },
+            { 'name': 'snapshot', 'width': '80', 'align': 'center', 
+              'formatter': 'checkbox', },
             { 'name': 'cache', 'width': '80', 'align': 'center', },
             { 'name': 'aio', 'width': '80', 'align': 'center', },
             { 'name': 'ser' },
@@ -207,10 +211,10 @@ class VDEGrid(tw2.jqplugins.jqgrid.jqGridWidget):
             { 'name': 'group', 'width': '60', 'align': 'center', },
             { 'name': 'rcfile', 'width': '80', 'align': 'center', },
             { 'name': 'ports', 'width': '80', 'align': 'center', },
-            { 'name': 'hub', 'width': '80', 'align': 'center', },
-            { 'name': 'fstp', 'width': '80', 'align': 'center', },
+            { 'name': 'hub', 'width': '80', 'align': 'center', 'formatter': 'checkbox', },
+            { 'name': 'fstp', 'width': '80', 'align': 'center', 'formatter': 'checkbox', },
             { 'name': 'macaddr', 'width': '80', 'align': 'center', },
-            { 'name': 'running', 'width': '80', 'align': 'center', },
+            { 'name': 'running', 'width': '80', 'align': 'center', 'formatter': 'checkbox', },
             ]
                     
     }
