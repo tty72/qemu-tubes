@@ -42,6 +42,9 @@ class MachineGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     pager_options = { "search" : True, "refresh" : True, "add" : True, 
                       "addfunc":tw2.core.js_callback("function(){window.location='/machineedit'}"), 
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/machineedit?id=' + row_id}"),
+                      'deltitle': 'Delete machine',
+                      'edittitle': 'Edit machine',
+                      'addtitle': 'Add machine',
                       }
     options = {
         'pager': 'module-machine-demo_pager',
@@ -88,8 +91,8 @@ class MachineGrid(tw2.jqplugins.jqgrid.jqGridWidget):
             'cursor': 'pointer'
         },
         ]
-    prmDel = {'url': '/machinedelete'}
-
+    prmDel = {'url': '/machinedelete',}
+    
     def prepare(self):
         super(MachineGrid, self).prepare()
         edmac = tw2.core.JSSource(location='head',
@@ -106,6 +109,9 @@ class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     pager_options = { "search" : True, "refresh" : True, "add" : True, 
                       "addfunc":tw2.core.js_callback("function(){window.location='/driveedit?machine_id=' + GetDriveMac()}"), 
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/driveedit?id=' + row_id }"),
+                      'deltitle': 'Delete drive',
+                      'edittitle': 'Edit drive',
+                      'addtitle': 'Add drive',
                       }
     options = {
         'pager': 'module-drive-demo_pager',
@@ -149,6 +155,9 @@ class NetGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     pager_options = { "search" : True, "refresh" : True, "add" : True, 
                       "addfunc":tw2.core.js_callback("function(){window.location='/netedit?machine_id=' + GetNetMac()}"), 
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/netedit?id=' + row_id }"),
+                      'deltitle': 'Delete net',
+                      'edittitle': 'Edit net',
+                      'addtitle': 'Add net',
                       }
     options = {
         'pager': 'module-net-demo_pager',
@@ -188,6 +197,9 @@ class VDEGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     pager_options = { "search" : True, "refresh" : True, "add" : True, 
                       "addfunc":tw2.core.js_callback("function(){window.location='/vdeedit'}"), 
                       "editfunc":tw2.core.js_callback("function(row_id){location.href='/vdeedit?id=' + row_id }"),
+                      'deltitle': 'Delete VDE switch',
+                      'edittitle': 'Edit VDE switch',
+                      'addtitle': 'Add VDE switch',
                       }
     options = {
         'pager': 'module-vde-demo_pager',
