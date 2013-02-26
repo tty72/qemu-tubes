@@ -302,6 +302,10 @@ class Net(Base, PathConfig):
         else:
             x += ',downscript=no'
         return [('-net', x)]
+    
+    @property
+    def vde_name(self):
+        return self.vde.name if self.vde else ''
 
 class Machine(Base, PathConfig, Launchable):
     __tablename__ = 'machines'
@@ -359,6 +363,11 @@ class Machine(Base, PathConfig, Launchable):
         """ Return the PID file for this machine """
         piddir = self.settings and self.settings['qtubes.pid_dir'] or '/tmp'
         return path.join(piddir, 'qemu_%d.pid' % self.id)
+
+    @property
+    def use_net(self):
+        """ True if netnone is not set, else False """
+        return bool(True - self.netnone)
         
     def __str__(self):
         return self.cmdline(None)

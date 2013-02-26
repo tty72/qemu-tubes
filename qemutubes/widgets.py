@@ -160,12 +160,12 @@ class NetGrid(tw2.jqplugins.jqgrid.jqGridWidget):
         'colNames': ['Type', 'Name', 'VLan', 'NIC Model', 'MacAddr', 'VDE', 
                     'VDE Port', 'Tap Iface',],
         'colModel': [
-            { 'name': 'type', 'index': 'filepath', },
-            { 'name': 'name', 'index': 'interface', 'width': '100', 'align': 'center', },
+            { 'name': 'type', 'index': 'ntype', },
+            { 'name': 'name', 'index': 'name', 'width': '100', 'align': 'center', },
             { 'name': 'vlan', 'width': '80', 'align': 'center', },
             { 'name': 'nicmodel', 'width': '60', 'align': 'center', },
             { 'name': 'macaddr', 'width': '60', 'align': 'center', },
-            { 'name': 'vde', 'width': '60', 'align': 'center', },
+            { 'name': 'vde', 'index': 'vde_name', 'width': '60', 'align': 'center', },
             { 'name': 'port', 'width': '80', 'align': 'center', },
             { 'name': 'ifname', 'width': '80', 'align': 'center', },
             ]

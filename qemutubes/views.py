@@ -14,9 +14,57 @@ from .models import (
 
 class ViewClass(object):
     """ Base class for views """
+    # Entity we map
+    entity = None
+    # List of properties on Entity we care about
+    enum_props = None
+
     def __init__(self, request):
         self.request = request
 
+    def get_slice(self):
+        """ Determine slice, offset, sort order and column for grid from request
+        returns: (count, offset, order, sortcol)
+        """
+        #FIXME: Assume jqgrid for now. Add heuristic later for other clients
+        count = int(self.request.params.get('rows', 0))
+        offset = (int(self.request.params.get('page', 0))-1) * count
+        order = self.request.params.get('sord', None)
+        sortcol = self.request.params.get('sidx', None)
+        return (count, offset, order, sortcol)
+        
+    def grid(self, filter=None):
+        if not self.entity:
+            return []
+        (count, offset, order, sortcol) = self.get_slice()
+        if sortcol and sortcol not in self.enum_props:
+            raise Exception('Sort requested on irrelevant column %s' % sortcol)
+        sort_sql = True if sortcol in self.entity.__mapper__.columns else False
+        total_rows = self.entity.query.count()
+        total_pages = total_rows / count if count else 1
+        rows = self.entity.query
+        if filter:
+            rows.filter(filter)
+        if sort_sql and sortcol:
+            rows = rows.order_by(sortcol+' '+order)
+        if count:
+            rows = rows.limit(count)
+        if offset:
+            rows = rows.offset(offset)
+        rows = rows.all()
+        elist = [{'id': entity.id, 
+                  'cell': [getattr(entity, prop) for prop in self.enum_props]
+                  } for entity in rows]
+        if not sort_sql and sortcol:
+            # Do the sort in python, so we can sort on non-ORM columns
+            reverse = False if order == 'asc' else True
+            elist.sort(key=lambda x: x['cell'][self.enum_props.index(sortcol)],
+                       reverse=reverse)
+        print "###$$$### HERE"
+        return {'total': total_pages, 'page': offset, 'records': len(elist),
+                'rows': elist}
+                
+            
 class Main(ViewClass):
 
     @view_config(route_name='main', 
@@ -32,19 +80,13 @@ class Main(ViewClass):
 
 
 class MachineView(ViewClass):
+    entity = Machine
+    enum_props = ['name', 'cpu', 'machtype', 'mem', 'vncport',
+                  'conport', 'use_net', 'running']
 
     @view_config(route_name='machine_grid', renderer='json')
     def grid(self):
-        """ Return JSON data for widget.MachineGrid request 
-        Requires request.params['mac-id'] points to a valid Machine id
-        """
-        machines = Machine.query.all()
-        mlist = [{ 'id': x.id, 'cell': [x.name, x.cpu, x.machtype,
-                x.mem, x.vncport, x.conport,
-                bool(True-x.netnone), x.running]} for x in machines]
-        res = { 'total': 1, 'page': 1, 'records': len(mlist), 
-                'rows': mlist}
-        return res
+        return super(MachineView, self).grid()
 
     @view_config(route_name='machine_edit', renderer='templates/edit.genshi')
     def edit(self):
@@ -109,6 +151,9 @@ class MachineView(ViewClass):
         
 class DriveView(ViewClass):
     """ Methods and views to manipulate a Drive model """
+    entity = Drive
+    enum_props= ['filepath', 'interface', 'media', 'bus', 'unit', 'ind',
+                 'snapshot', 'cache', 'aio', 'ser']
 
     @view_config(route_name='drive_grid', renderer='json')
     def grid(self):
@@ -118,15 +163,9 @@ class DriveView(ViewClass):
         mac = self.request.params.get('mac_id', None)
         if mac == None:
             return []
-        drives = DBSession.query(Drive).filter(Drive.machine_id==mac)
-        dlist = [{ 'id': x.id, 'cell': [x.filepath, x.interface, x.media,
-                x.bus, x.unit, x.ind,
-                x.snapshot, x.cache, x.aio,
-                x.ser]} for x in drives]
-        res = { 'total': 1, 'page': 1, 'records': len(dlist), 
-                'rows': dlist, 'userdata': mac }
-        return res
-      
+        return super(DriveView, self).grid(
+            filter=Drive.query.filter(Drive.id==mac))
+
     @view_config(route_name='drive_edit', renderer='templates/edit.genshi')
     def edit(self):
         """ Begin editing a new Drive unit, or validate and store an edit """
@@ -168,6 +207,9 @@ class DriveView(ViewClass):
 
 class NetView(ViewClass):
     """ Methods and views to manipulate a Net model """
+    entity = Net
+    enum_props = ['ntype', 'name', 'vlan', 'nicmodel', 'macaddr',
+                  'vde_name', 'port', 'ifname']
 
     @view_config(route_name='net_grid', renderer='json')
     def grid(self):
@@ -177,14 +219,8 @@ class NetView(ViewClass):
         mac = self.request.params.get('mac_id', None)
         if mac == None:
             return []
-        nets = DBSession.query(Net).filter(Net.machine_id==mac)
-        nlist = [{ 'id': x.id, 'cell': [x.ntype, x.name, x.vlan,
-                x.nicmodel, x.macaddr, x.vde.name if x.vde else '',
-                x.port, x.ifname,]} for x in nets]
-        res = { 'total': 1, 'page': 1, 'records': len(nlist), 
-                'rows': nlist, 'userdata': mac }
-        return res
-      
+        return super(NetView, self).grid(filter=Net.query.filter(Net.id==mac))
+
     @view_config(route_name='net_edit', renderer='templates/edit.genshi')
     def edit(self):
         """ Begin editing a new Net unit, or validate and store an edit """
@@ -226,11 +262,16 @@ class NetView(ViewClass):
 
 class VDEView(ViewClass):
     """ Methods and views to manipulate a VDE model """
-
+    entity = VDE
+    enum_props = ['name', 'sock', 'mgmt', 'tap', 'mode', 'group',
+                  'rcfile', 'ports', 'hub', 'fstp', 'macaddr',
+                  'running']
     @view_config(route_name='vde_grid', renderer='json')
     def grid(self):
         """ Return JSON data for widget.VDEGrid request 
         """
+        return super(VDEView, self).grid()
+        '''
         vdes = DBSession.query(VDE).all()
         vlist = [{ 'id': x.id, 'cell': [x.name, x.sock, x.mgmt,
                 x.tap, x.mode, x.group, x.rcfile, x.ports,
@@ -238,7 +279,7 @@ class VDEView(ViewClass):
         res = { 'total': 1, 'page': 1, 'records': len(vlist), 
                 'rows': vlist,}
         return res
-      
+        '''
     @view_config(route_name='vde_edit', renderer='templates/edit.genshi')
     def edit(self):
         """ Begin editing a VDE or validate and store an edit
