@@ -17,8 +17,6 @@ class ViewClass(object):
     def __init__(self, request):
         self.request = request
 
-<<<<<<< Updated upstream
-=======
     def get_slice(self):
         """ Determine slice, offset, sort order and column for grid from request
         returns: (count, offset, order, sortcol)
@@ -61,7 +59,6 @@ class ViewClass(object):
                 'rows': elist}
                 
             
->>>>>>> Stashed changes
 class Main(ViewClass):
 
     @view_config(route_name='main', 
@@ -151,7 +148,14 @@ class MachineView(ViewClass):
         if retcode != 0:
             self.request.session.flash('Launch failed: '+output)
         return HTTPFound(location='/')
-        
+
+    @view_config(route_name='machine_vnc', renderer='templates/machine_vnc.genshi') 
+    def vnc(self):
+        """ Launch machine VNC viewer """
+        mid = self.request.params['id']
+        m = Machine.query.filter(Machine.id==mid).first()
+        return {'machine': m}
+
 class DriveView(ViewClass):
     """ Methods and views to manipulate a Drive model """
 
