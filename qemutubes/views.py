@@ -17,6 +17,51 @@ class ViewClass(object):
     def __init__(self, request):
         self.request = request
 
+<<<<<<< Updated upstream
+=======
+    def get_slice(self):
+        """ Determine slice, offset, sort order and column for grid from request
+        returns: (count, offset, order, sortcol)
+        """
+        #FIXME: Assume jqgrid for now. Add heuristic later for other clients
+        count = int(self.request.params.get('rows', 0))
+        offset = (int(self.request.params.get('page', 0))-1) * count
+        order = self.request.params.get('sord', None)
+        sortcol = self.request.params.get('sidx', None)
+        return (count, offset, order, sortcol)
+        
+    def grid(self, filter=None):
+        if not self.entity:
+            return []
+        (count, offset, order, sortcol) = self.get_slice()
+        if sortcol and sortcol not in self.enum_props:
+            raise Exception('Sort requested on irrelevant column %s' % sortcol)
+        sort_sql = True if sortcol in self.entity.__mapper__.columns else False
+        total_rows = self.entity.query.count()
+        total_pages = total_rows / count if count else 1
+        rows = self.entity.query
+        if filter:
+            rows.filter(filter)
+        if sort_sql and sortcol:
+            rows = rows.order_by(sortcol+' '+order)
+        if count:
+            rows = rows.limit(count)
+        if offset:
+            rows = rows.offset(offset)
+        rows = rows.all()
+        elist = [{'id': entity.id, 
+                  'cell': [getattr(entity, prop) for prop in self.enum_props]
+                  } for entity in rows]
+        if not sort_sql and sortcol:
+            # Do the sort in python, so we can sort on non-ORM columns
+            reverse = False if order == 'asc' else True
+            elist.sort(key=lambda x: x['cell'][self.enum_props.index(sortcol)],
+                       reverse=reverse)
+        return {'total': total_pages, 'page': offset, 'records': len(elist),
+                'rows': elist}
+                
+            
+>>>>>>> Stashed changes
 class Main(ViewClass):
 
     @view_config(route_name='main', 
