@@ -1,5 +1,5 @@
 from qemutubes.models import Machine, Drive, Net, VDE
-import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 class Exporter(object):
     """ DB to XML export class """
@@ -9,7 +9,10 @@ class Exporter(object):
         self.grow_tree()
 
     def grow_tree(self):
-        self.root = ET.Element('qtubesdump', version=self.version)
+        self.doc = minidom.Document()
+        self.root = self.doc.createElement('qtubesdump')
+        self.root.setAttribute('version', self.version)
+        self.doc.appendChild(self.root)
         self.graft_machines()
         
     def graft_machines(self):
@@ -18,13 +21,15 @@ class Exporter(object):
                       'conport', 'netnone']
         machines = Machine.query.all()
         for m in machines:
-            mt = ET.SubElement(self.root, 'machine', id=str(m.id))
+            mt = self.doc.createElement('machine')
+            mt.setAttribute('id', str(m.id))
             self.graft_items([(c,c) for c in saved_cols],
                              mt, m)
             for drive in m.drives:
                 self.graft_drive(mt, m.id)
             for net in m.nets:
                 self.graft_net(mt, m.id)
+            self.root.appendChild(mt)
 
     def graft_drive(self, mt, mid):
         saved_cols = ['filepath', 'interface', 'media', 'bus', 'unit', 'ind',
@@ -32,21 +37,27 @@ class Exporter(object):
                       'aio', 'ser']
         drives = Drive.query.filter(Drive.machine_id == mid).all()
         for d in drives:
-            dt = ET.SubElement(mt, 'drive', id=str(d.id))
+            dt = self.doc.createElement('drive')
+            dt.setAttribute('id', str(d.id))
             self.graft_items([(c,c) for c in saved_cols],
                              dt, d)
-
+            mt.appendChild(dt)
             
     def graft_net(self, mt, mid):
         saved_cols = ['ntype', 'vlan', 'name', 'nicmodel', 'macaddr',
                       'port', 'script', 'downscript', 'ifname']
         nets = Net.query.filter(Net.machine_id == mid).all()
         for n in nets:
-            nt = ET.SubElement(mt, 'net', id=str(n.id))
+            nt = self.doc.createElement('net')
+            nt.setAttribute('id', str(n.id))
             self.graft_items([(c,c) for c in saved_cols],
                              nt, n)
-            ct = ET.SubElement(nt, 'vde')
-            ct.text = n.vde_name
+            ct = self.doc.createElement('vde')
+            if n.vde_name:
+                t = self.doc.createTextNode(n.vde_name)
+                ct.appendChild(t)
+            nt.appendChild(ct)
+            mt.appendChild(nt)
 
     def graft_items(self, ilist, element, ob):
         """ Graft attributes from object into tree at element
@@ -58,11 +69,13 @@ class Exporter(object):
            Values of None generate an empty tag
         """
         for c in ilist:
-            ct = ET.SubElement(element, c[1])
+            ct = self.doc.createElement(c[1])
             v = getattr(ob, c[0])
             if v is not None:
-                ct.text = str(v)
+                t = self.doc.createTextNode(str(v))
+                ct.appendChild(t)
+            element.appendChild(ct)
             
     def write(self, fd):
-        ET.ElementTree(self.root).write(fd, encoding="utf-8", 
-                                        xml_declaration=True)
+        f=open(fd,'w')
+        self.doc.writexml(f,indent='', newl='\n', addindent='   ')
