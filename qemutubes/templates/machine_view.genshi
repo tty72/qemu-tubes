@@ -14,7 +14,7 @@
     <div>
       ${netgrid.display()}
     </div>
-    <ul>
+    <ul py:if="machine.running">
       <li><a href="/machinevnc?id=${machine.id}">VNC viewer</a></li>
     </ul>
     <h3 class="cmdline">${cmdline}</h3>
