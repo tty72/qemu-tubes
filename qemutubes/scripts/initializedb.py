@@ -3,7 +3,13 @@ import sys
 import transaction
 import subprocess
 
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, event
+from sqlalchemy.engine import Engine
+try:
+    from sqlite3 import Connection as sqlite3con
+    havesqlite=True
+except ImportError:
+    havesqlite = False
 
 from pyramid.paster import (
     get_appsettings,
@@ -21,6 +27,12 @@ from ..models import (
     Base,
     )
 
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if havesqlite and isinstance(dbapi_connection, sqlite3con):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 def usage(argv):
     cmd = os.path.basename(argv[0])
@@ -59,7 +71,6 @@ def main(argv=sys.argv):
     config_uri = argv[1]
     setup_logging(config_uri)
     settings = get_appsettings(config_uri)
-    print settings.local_conf
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)

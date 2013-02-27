@@ -135,7 +135,7 @@ class VDE(Base, PathConfig, Launchable):
     hub = Column(Boolean, default=False)
     fstp = Column(Boolean)
     macaddr = Column(Text)
-    nets = relationship('Net', backref='vde')
+    nets = relationship('Net', backref='vde', cascade='all, delete-orphan')
 
     @property
     def pidfile(self):
@@ -172,10 +172,12 @@ class VDE(Base, PathConfig, Launchable):
 class Drive(Base, PathConfig):
     __tablename__ = 'drives'
     id = Column(Integer, primary_key=True)
-    machine_id = Column(Integer, ForeignKey('machines.id'))
+    machine_id = Column(Integer, ForeignKey('machines.id', ondelete='CASCADE'))
     filepath = Column(Text, nullable=False)
-    interface = Column(Enum(*DRIVE_IFS), nullable=False)
-    media = Column(Enum(*MEDIA), nullable=False)
+    interface = Column(Enum(*DRIVE_IFS, name='enum_iface'), 
+                       nullable=False)
+    media = Column(Enum(*MEDIA, name='enum_media'), 
+                   nullable=False)
     bus = Column(Integer)
     unit = Column(Integer)
     ind = Column(Integer)
@@ -184,10 +186,11 @@ class Drive(Base, PathConfig):
     secs = Column(Integer)
     trans = Column(Integer)
     snapshot = Column(Boolean, default=False)
-    cache = Column(Enum(*CACHE_TYPES), default=CACHE_TYPES[0])
-    aio = Column(Enum(*AIO_TYPES), default=AIO_TYPES[0])
+    cache = Column(Enum(*CACHE_TYPES, name='enum_cache'),
+                   default=CACHE_TYPES[0])
+    aio = Column(Enum(*AIO_TYPES, name='enum_aio'), 
+                 default=AIO_TYPES[0])
     ser = Column(Text)
-    #machine = relationship('Machine')
     __table_args__ = (UniqueConstraint('ind','machine_id'),)
 
     @property
@@ -226,8 +229,9 @@ class Drive(Base, PathConfig):
 class Net(Base, PathConfig):
     __tablename__ = 'nets'
     id = Column(Integer, primary_key=True)
-    machine_id = Column(Integer, ForeignKey('machines.id'))
-    ntype = Column(Enum(*NET_TYPES), default=NET_TYPES[0])
+    machine_id = Column(Integer, ForeignKey('machines.id', ondelete='CASCADE'))
+    ntype = Column(Enum(*NET_TYPES, name='enum_net'),
+                   default=NET_TYPES[0])
     vlan = Column(Integer)
     name = Column(Text)
     # NIC cols
@@ -240,8 +244,6 @@ class Net(Base, PathConfig):
     script = Column(Text)
     downscript = Column(Text)
     ifname = Column(Text)
-
-#    vde = relationship('VDE')
 
     @property
     def args(self):
@@ -318,8 +320,10 @@ class Machine(Base, PathConfig, Launchable):
     vncport = Column(Integer, unique=True, nullable=False)
     conport = Column(Integer, unique=True, nullable=False)
     netnone = Column(Boolean, default=False)
-    drives = relationship('Drive', backref='machine')
-    nets = relationship('Net', backref='machine')
+    drives = relationship('Drive', cascade='all, delete, delete-orphan',
+                          backref=backref('machine', single_parent=True))
+    nets = relationship('Net', cascade='all, delete, delete-orphan',
+                        backref=backref('machine', single_parent=True))
 #    drive_count = column_property(
 #        select([func.count(Drive.id)]).where(Drive.id == id))
 #    net_count = column_property(

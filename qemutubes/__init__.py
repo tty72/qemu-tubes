@@ -1,5 +1,11 @@
 from pyramid.config import Configurator
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, event
+from sqlalchemy.engine import Engine
+try:
+    from sqlite3 import Connection as sqlite3con
+    havesqlite=True
+except ImportError:
+    havesqlite = False
 
 from .models import (
     DBSession,
@@ -9,11 +15,21 @@ from .models import (
 from pyramid.session import UnencryptedCookieSessionFactoryConfig
 qtubes_session_factory = UnencryptedCookieSessionFactoryConfig('qemutubeskey')
 
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if havesqlite and isinstance(dbapi_connection, sqlite3con):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+
+
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
+    #FIXME: Does this break engines other than sqlite?
     Base.metadata.bind = engine
     config = Configurator(settings=settings, 
                           session_factory=qtubes_session_factory)
