@@ -82,11 +82,11 @@ def main(argv=sys.argv):
     nics = nic_list(qemubin)
     print "Supported NICs: ",nics
     with transaction.manager:
-        for i in cpus:
+        for i in ['']+cpus:
             DBSession.add(CPUType(i))
-        for i in machs:
+        for i in ['']+machs:
             DBSession.add(MachineType(i))
-        for i in nics:
+        for i in ['']+nics:
             DBSession.add(NICType(i))
         m = Machine()
         m.name = 'Test'
