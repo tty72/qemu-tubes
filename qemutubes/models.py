@@ -332,7 +332,7 @@ class Machine(Base, PathConfig, Launchable):
         qemu = self.settings and self.settings['qtubes.qemubin'] or 'qemu'
         a = [(qemu,),
              ('-vnc', ':%d' % self.vncport),
-             ('-monitor', 'telnet::%d,server,nowait' % self.conport),
+             ('-qmp', 'tcp::%d,server,nowait' % self.conport),
              ('-name', '%s' % self.name),
              ('-pidfile', self.pidfile),
              ('-daemonize',),
@@ -368,7 +368,7 @@ class Machine(Base, PathConfig, Launchable):
     @property
     def use_net(self):
         """ True if netnone is not set, else False """
-        return bool(True - self.netnone)
+        return bool(True - (self.netnone or False))
         
     def __str__(self):
         return self.cmdline(None)
