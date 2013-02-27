@@ -62,4 +62,4 @@ class Launchable(object):
             return False
         return True
 
-__all__ = [PathConfig, Launchable]
+

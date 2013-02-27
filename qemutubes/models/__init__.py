@@ -20,3 +20,4 @@ from machine import Machine, CPUType, MachineType
 from drive import Drive
 from net import NICType, Net
 from vde import VDE
+from importexport import Exporter
