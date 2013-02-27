@@ -1,3 +1,4 @@
+import os.path as path
 from qemutubes.models import (
     DBSession, 
     Base,
@@ -44,7 +45,7 @@ class Net(Base, PathConfig):
     script = Column(Text)
     downscript = Column(Text)
     ifname = Column(Text)
-
+    
     @property
     def args(self):
         if self.ntype == 'nic':
