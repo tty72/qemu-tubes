@@ -27,7 +27,7 @@ requires = [
     ]
 
 setup(name='QemuTubes',
-      version='0.5',
+      version='0.6',
       description='QemuTubes',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
