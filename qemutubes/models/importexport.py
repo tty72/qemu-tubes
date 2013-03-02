@@ -139,7 +139,7 @@ class Importer(object):
             (name, data) = self.parse_vde(v)
             self.vdes[name] = data
         for m in machines:
-            (name, data) = self.parse_machines(m)
+            (name, data) = self.parse_machine(m)
             self.machines[name] = data
 
     def parse_vde(self, vde):
@@ -149,13 +149,35 @@ class Importer(object):
         data = self.parse_cols(vde, saved_cols)
         return (name, data)
 
-    def parse_machines(self, machine):
+    def parse_machine(self, machine):
         saved_cols = ['cpu', 'machtype', 'mem', 'vncport',
                       'conport', 'netnone']
         name = machine.attributes['name'].value
         data = self.parse_cols(machine, saved_cols)
+        data['drives']=[]
+        data['nets']=[]
+        drives = machine.getElementsByTagName('drive')
+        for drive in drives:
+            data['drives'].append(self.parse_drive(drive))
+        nets = machine.getElementsByTagName('net')
+        for net in nets:
+            data['nets'].append(self.parse_net(net))
         return (name, data)
 
+    def parse_drive(self, drive):
+        saved_cols = ['filepath', 'interface', 'media', 'bus', 'unit', 'ind',
+                      'cyls', 'heads', 'secs', 'trans', 'snapshot', 'cache',
+                      'aio', 'ser']
+        return self.parse_cols(drive, saved_cols)
+
+    def parse_net(self, net):
+        saved_cols = ['ntype', 'vlan', 'nicmodel', 'macaddr',
+                      'port', 'script', 'downscript', 'ifname']
+        print net.tagName
+        name = net.attributes['name'].value
+        data = self.parse_cols(net, saved_cols)
+        data['name'] = name
+        return data
 
     def parse_cols(self, node, cols):
         """ Parse all children of node matching one of cols
