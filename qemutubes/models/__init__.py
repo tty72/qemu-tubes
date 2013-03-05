@@ -4,6 +4,10 @@ from sqlalchemy.orm import (
     scoped_session,
     sessionmaker,
     )
+__version__ = '0.2' # DB import/export relies on this. Increment it when the 
+                    # model is altered enough to break import/export.
+                    # This runs somewhat counter to PEP 396, but I can't
+                    # think of a good argument against it.
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 
 Base = declarative_base()
@@ -20,4 +24,4 @@ from machine import Machine, CPUType, MachineType
 from drive import Drive
 from net import NICType, Net
 from vde import VDE
-from importexport import Exporter, Importer
+from importexport import Exchange

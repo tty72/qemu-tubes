@@ -21,7 +21,8 @@ from sqlalchemy import (
 class Drive(Base, PathConfig):
     __tablename__ = 'drives'
     id = Column(Integer, primary_key=True)
-    machine_id = Column(Integer, ForeignKey('machines.id', ondelete='CASCADE'))
+    machine_id = Column(Integer, ForeignKey('machines.id', ondelete='CASCADE'),
+                        nullable=False)
     filepath = Column(Text, nullable=False)
     interface = Column(Enum(*DRIVE_IFS, name='enum_iface'), 
                        nullable=False)
