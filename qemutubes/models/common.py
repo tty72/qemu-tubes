@@ -1,5 +1,6 @@
 import os
 path = os.path
+import signal
 import subprocess
 
 class PathConfig(object):
@@ -23,7 +24,7 @@ class Launchable(object):
         return [i for subi in lst for i in subi]
 
     def launch(self):
-        """ Launch this machine instance if not already running """
+        """ Launch this instance if not already running """
         if self.running:
             #FIXME: LOG or raise exception here?
             return (-254, 'Already running')
@@ -37,6 +38,7 @@ class Launchable(object):
         
     @property
     def pidfile(self):
+        """ Return the PID file path - child classes must provide this """
         raise NotImplementedError
 
     @property
@@ -62,4 +64,10 @@ class Launchable(object):
             return False
         return True
 
+    def kill(self, term=True):
+        """ Kill this process 
+            term - Set False to kill with extreme prejudice """
+        sig = signal.SIGTERM if term else signal.SIGKILL
+        if self.pid:
+            os.kill(self.pid, sig)
 

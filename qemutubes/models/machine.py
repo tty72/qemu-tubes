@@ -60,6 +60,22 @@ class Machine(Base, PathConfig, Launchable):
     nets = relationship('Net', cascade='all, delete, delete-orphan',
                         backref=backref('machine', single_parent=True))
 
+    def stop(self):
+        return self.qmp.cmd('stop')['return']
+
+    def cont(self):
+        return self.qmp.cmd('cont')['return']
+
+    def power_down(self):
+        return self.qmp.cmd('system_powerdown')['return']
+
+    def reset(self):
+        return self.qmp.cmd('system_reset')['return']
+
+    @property
+    def status(self):
+        return self.qmp.cmd('query-status')['return']
+
     @property
     def args(self):
         qemu = self.settings and self.settings['qtubes.qemubin'] or 'qemu'
@@ -92,7 +108,9 @@ class Machine(Base, PathConfig, Launchable):
         try:
             return self._qmp
         except AttributeError:
-            self._qmp = qmp.QEMUMonitorProtocol()
+            self._qmp = qmp.QEMUMonitorProtocol(self.monsock)
+            self._qmp.connect()
+            return self._qmp
 
     @property
     def monsock(self):

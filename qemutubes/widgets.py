@@ -83,10 +83,26 @@ class MachineGrid(tw2.jqplugins.jqgrid.jqGridWidget):
         },
         {
             'caption': '',
+            'buttonicon': 'ui-icon-stop',
+            'onClickButton': tw2.core.js_callback("PDMachine"),
+            'position': 'last',
+            'title': 'Power Down',
+            'cursor': 'pointer'
+        },
+        {
+            'caption': '',
             'buttonicon': 'ui-icon-play',
             'onClickButton': tw2.core.js_callback("LaunchMachine"),
             'position': 'last',
             'title': 'Launch',
+            'cursor': 'pointer'
+        },
+        {
+            'caption': '',
+            'buttonicon': 'ui-icon-closethick',
+            'onClickButton': tw2.core.js_callback("KillMachine"),
+            'position': 'last',
+            'title': 'Kill Machine',
             'cursor': 'pointer'
         },
         ]
@@ -100,8 +116,16 @@ class MachineGrid(tw2.jqplugins.jqgrid.jqGridWidget):
         launchmac = tw2.core.JSSource(location='head',
                                       src="""function LaunchMachine() { var row=$('#%s').jqGrid('getGridParam', 'selrow');; 
                                          window.location='/machinelaunch?id=' + row }""" %self.selector)
+        stopmac = tw2.core.JSSource(location='head',
+                                    src="""function PDMachine() { var row=$('#%s').jqGrid('getGridParam', 'selrow');; 
+                                         window.location='/machinepowerdown?id=' + row }""" %self.selector)
+        killmac = tw2.core.JSSource(location='head',
+                                    src="""function KillMachine() { var row=$('#%s').jqGrid('getGridParam', 'selrow');; 
+                                         window.location='/machinekill?id=' + row }""" %self.selector)
         self.resources.append(edmac)
         self.resources.append(launchmac)
+        self.resources.append(stopmac)
+        self.resources.append(killmac)
 
 class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     id = 'drive_grid'

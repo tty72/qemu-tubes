@@ -151,6 +151,28 @@ class MachineView(ViewClass):
             self.request.session.flash('Launch failed: '+output)
         return HTTPFound(location='/')
 
+    @view_config(route_name='machine_powerdown') 
+    def power_down(self):
+        """ Power Down machine
+        Requires request.params['id'] points to a valid Machine id
+        """
+        mid = self.request.params['id']
+        m = Machine.query.filter(Machine.id==mid).first()
+        output = m.power_down()
+        self.request.session.flash('PowerDown: '+str(output))
+        return HTTPFound(location='/')
+
+    @view_config(route_name='machine_kill') 
+    def kill(self):
+        """ Power Down machine
+        Requires request.params['id'] points to a valid Machine id
+        """
+        mid = self.request.params['id']
+        m = Machine.query.filter(Machine.id==mid).first()
+        m.kill()
+        self.request.session.flash('Killed: '+m.name)
+        return HTTPFound(location='/')
+
     @view_config(route_name='machine_vnc', renderer='templates/machine_vnc.genshi') 
     def vnc(self):
         """ Launch machine VNC viewer """
