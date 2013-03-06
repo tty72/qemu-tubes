@@ -58,7 +58,7 @@ class MachineGrid(tw2.jqplugins.jqgrid.jqGridWidget):
         'imgpath': 'scripts/jqGrid/themes/green/images',
         'width': 898,
         'height': 'auto',
-        'colNames': ['Name', 'CPU', 'Type', 'Memory', 'VNC Port', 'Console', 'Network', 'Active'],
+        'colNames': ['Name', 'CPU', 'Type', 'Memory', 'VNC Port', 'Network', 'Active'],
         'colModel': [
             { 'name': 'name', 'index': 'name', },
             { 'name': 'cpu', 'index': 'cpu', 'width': '100', 'align': 'center', },
@@ -66,7 +66,6 @@ class MachineGrid(tw2.jqplugins.jqgrid.jqGridWidget):
             { 'name': 'mem', 'width': '60', 'align': 'center', },
             { 'name': 'vncport', 'width': '60', 'align': 'center', 'formatter': 'showlink',
               'formatoptions': {'baseLinkUrl': '/machinevnc'}, },
-            { 'name': 'conport', 'width': '60', 'align': 'center', },
             { 'name': 'netnone', 'width': '80', 'align': 'center', 
               'formatter': 'checkbox', },
             { 'name': 'running', 'width': '80', 'align': 'center',
@@ -257,7 +256,6 @@ class MachineForm(tw2.forms.TableForm, DBForm):
     name = tw2.forms.TextField(validator=tw2.core.Required)
     mem = tw2.forms.TextField()
     vncport = tw2.forms.TextField(validator=tw2.core.IntValidator)
-    conport = tw2.forms.TextField(validator=tw2.core.IntValidator)
     netnone = tw2.forms.CheckBox()
     cpu = tw2.forms.SingleSelectField(options=list_cputypes())
     machtype = tw2.forms.SingleSelectField(options=list_machinetypes())

@@ -88,6 +88,7 @@ def main(argv=sys.argv):
             DBSession.add(MachineType(i))
         for i in ['']+nics:
             DBSession.add(NICType(i))
+        """
         m = Machine()
         m.name = 'Test'
         m.cpu = 'host'
@@ -114,3 +115,4 @@ def main(argv=sys.argv):
         DBSession.add(n1)
     m = DBSession.query(Machine).first()
     print qemubin+' '+m.cmdline
+    """

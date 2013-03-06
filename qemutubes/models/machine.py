@@ -1,4 +1,5 @@
 import os.path as path
+from .. import qmp
 
 from qemutubes.models import (
     DBSession, 
@@ -52,25 +53,21 @@ class Machine(Base, PathConfig, Launchable):
     machtype = Column(Text, ForeignKey('machine_types.mtype'))
     mem = Column(Text)
     vncport = Column(Integer, unique=True, nullable=False)
-    conport = Column(Integer, unique=True, nullable=False)
+    #conport = Column(Integer, unique=True, nullable=False)
     netnone = Column(Boolean, default=False)
     drives = relationship('Drive', cascade='all, delete, delete-orphan',
                           backref=backref('machine', single_parent=True))
     nets = relationship('Net', cascade='all, delete, delete-orphan',
                         backref=backref('machine', single_parent=True))
-#    drive_count = column_property(
-#        select([func.count(Drive.id)]).where(Drive.id == id))
-#    net_count = column_property(
-#        select([func.count(NetNIC.id)+func.count(NetVDE.id)+
-#                         func.count(NetTap.id)]).where(
-#                or_(NetNIC.id == id, NetVDE.id == id, NetTap.id == id)))
 
     @property
     def args(self):
         qemu = self.settings and self.settings['qtubes.qemubin'] or 'qemu'
         a = [(qemu,),
              ('-vnc', ':%d' % self.vncport),
-             ('-qmp', 'tcp::%d,server,nowait' % self.conport),
+             ('-chardev', 
+              'socket,id=defaultmon,path=%s,server,nowait' % self.monsock),
+             ('-mon', 'chardev=defaultmon,mode=control'),
              ('-name', '%s' % self.name),
              ('-pidfile', self.pidfile),
              ('-daemonize',),
@@ -89,6 +86,18 @@ class Machine(Base, PathConfig, Launchable):
             d.configure(self.settings)
             a.extend(d.args)
         return a
+
+    @property
+    def qmp(self):
+        try:
+            return self._qmp
+        except AttributeError:
+            self._qmp = qmp.QEMUMonitorProtocol()
+
+    @property
+    def monsock(self):
+        """ Return our monitor socket """
+        return '/tmp/qemu_mon%d' % self.id
 
     @property
     def cmdline(self):

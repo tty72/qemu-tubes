@@ -84,7 +84,7 @@ class Main(ViewClass):
 class MachineView(ViewClass):
     entity = Machine
     enum_props = ['name', 'cpu', 'machtype', 'mem', 'vncport',
-                  'conport', 'use_net', 'running']
+                  'use_net', 'running']
 
     @view_config(route_name='machine_grid', renderer='json')
     def grid(self):
