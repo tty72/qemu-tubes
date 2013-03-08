@@ -20,9 +20,7 @@ class Exchange(object):
         self.tables = list(metadata.sorted_tables)
         if ignlist:
             for table in list(self.tables):
-                print table.name, str(ignlist)
                 if table.name in ignlist:
-                    print "Ignoring: %s", table.name
                     self.tables.remove(table)
 
     # Exporter code
@@ -33,7 +31,6 @@ class Exchange(object):
         root.setAttribute('version', dbversion)
         self.doc.appendChild(root)
         for t in self.tables:
-            print dir(t)
             e = self.doc.createElement(t.name)
             root.appendChild(e)
             self.export_table(e, t)
@@ -64,7 +61,7 @@ class Exchange(object):
         fd - file-like object or string containing file path
         **kw - passed directly to minidom.Document.writexml()
         """
-        if type(fd) is not file:
+        if not hasattr(file, 'write'):
             fd = open(fd, 'w')
         self.doc.writexml(fd, **kw)
 
@@ -73,7 +70,7 @@ class Exchange(object):
         """ Import XML data from file-like object.
         fd - File-like object of string containing path name
         """
-        if type(fd) is not file:
+        if not hasattr(fd, 'read'):
             fd = open(fd, 'r')
         self.doc = minidom.parse(fd)
         root = self.doc.documentElement
