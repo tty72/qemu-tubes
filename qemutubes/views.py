@@ -21,6 +21,7 @@ class ViewClass(object):
 
     def __init__(self, request):
         self.request = request
+        self.menu = qemutubes.widgets.MainMenu.req()
 
     def get_slice(self):
         """ Determine slice, offset, sort order and column for grid from request
@@ -333,7 +334,7 @@ class VDEView(ViewClass):
                 return HTTPFound(location=url)
             except tw2.core.ValidationError, e:
                 widget = e.widget.req()
-        return {'form': widget}
+        return { 'form': widget }
 
     @view_config(route_name='vde_delete')
     def delete(self):

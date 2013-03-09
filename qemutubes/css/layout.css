@@ -66,6 +66,16 @@ div#content {
     width: 900px;
     margin: 0px auto 0px auto;
     padding: 0px;
+    height: auto;
+}
+#header a {
+    display: block;
+    margin: 0px;
+    padding: 0px;
+}
+
+#header img {
+    display: block;
 }
 
 #wrap {

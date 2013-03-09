@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xmlns:py="http://genshi.edgewall.org/" py:strip="">
+  <head py:strip="">
+  </head>
+  
+  <body py:strip="">
+    <div id="${w.id}">
+      <ul py:def="submenu(ents)" class="sub_menu">
+	<li py:for="ent in ents.values()">
+	  <a href="${ent['target']}" py:attrs="ent.get('attrs',{})">${ent['label']}</a>
+	  ${submenu(ent['submenu']) if ent.get('submenu') else "" }
+	</li>
+      </ul>
+      <ul class="dropdown">
+	<li py:for="m in w.active">
+	  <a href="${w.menu[m]['target']}" py:attrs="w.menu[m].get('attrs',{})">${w.menu[m]['label']}</a>
+	  ${submenu(w.menu[m]['submenu']) if w.menu[m].get('submenu') else "" }
+	</li>
+      </ul>
+    </div>
+  </body>
+  
+</html>
