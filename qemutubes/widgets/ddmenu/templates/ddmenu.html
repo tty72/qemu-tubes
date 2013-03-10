@@ -8,7 +8,7 @@
   <body py:strip="">
     <div id="${w.id}">
       <ul py:def="submenu(ents)" class="sub_menu">
-	<li py:for="ent in ents.values()">
+	<li py:for="ent in ents">
 	  <a href="${ent['target']}" py:attrs="ent.get('attrs',{})">${ent['label']}</a>
 	  ${submenu(ent['submenu']) if ent.get('submenu') else "" }
 	</li>
