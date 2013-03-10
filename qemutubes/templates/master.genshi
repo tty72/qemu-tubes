@@ -16,7 +16,7 @@
 	<div id="wrapper">
 	  <div id="header">
 	    <a href="/">
-	      <img src="/static/qtubes.png" />
+	      <img src="/static/qtubes.png" width="900" height="34" />
 	    </a>
 	  </div>
 	  <div id="menu">${view.menu.display()}</div>
