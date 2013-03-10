@@ -7,7 +7,6 @@
     <title>Machine View</title>
   </head>
   <body class="submit">
-    <h1> Machine: ${machine.name} </h1>
     <div>
       ${drivegrid.display()}
     </div>
@@ -17,6 +16,7 @@
     <ul py:if="machine.running">
       <li><a href="/machinevnc?id=${machine.id}">VNC viewer</a></li>
     </ul>
+    <h1> Machine: ${machine.name} </h1>
     <h3 class="cmdline">${cmdline}</h3>
   </body>
 </html>
