@@ -22,6 +22,7 @@ class ViewClass(object):
     def __init__(self, request):
         self.request = request
         self.menu = qemutubes.widgets.MainMenu.req()
+        self.popup = qemutubes.widgets.PopUp.req()
 
     def get_slice(self):
         """ Determine slice, offset, sort order and column for grid from request

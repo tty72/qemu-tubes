@@ -5,7 +5,7 @@ class MainMenu(ddmenu.DDMenu):
     dbmenu = [{ 'label': 'Export', 'target': '#', },
               { 'label': 'Import', 'target': '#', },
               ]
-    toolsmenu = [{ 'label': 'DB', 'target': '#',
+    toolsmenu = [{ 'label': 'DB', 'target': '#', 'attrs': {'class': 'qtpopup'},
                    'submenu': dbmenu, } 
                   ]
     menu = { 'main': { 'label': 'Main', 'target': '/' },

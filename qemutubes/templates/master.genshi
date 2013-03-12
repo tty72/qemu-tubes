@@ -20,6 +20,7 @@
 	    </a>
 	  </div>
 	  <div id="menu">${view.menu.display()}</div>
+	  ${view.popup.display()}
 	  <div id="flash" py:if='request.session.peek_flash()'>
 	    <span py:replace="request.session.pop_flash()">OK</span>
 	  </div>
