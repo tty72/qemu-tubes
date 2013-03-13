@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xmlns:py="http://genshi.edgewall.org/">
+  <head>
+    <title>DB Upload</title>
+  </head>
+  <body>
+    <div py:if="defined('form')">${form.display()}</div>
+    <div py:if="not defined('form')">Import complete</div>
+  </body>
+</html>
