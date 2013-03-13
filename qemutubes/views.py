@@ -1,3 +1,4 @@
+import StringIO
 from pyramid.response import Response
 from pyramid.view import view_config
 import qemutubes.widgets
@@ -10,6 +11,8 @@ from .models import (
     Drive,
     Net,
     VDE,
+    Exchange,
+    Base,
     )
 
 class ViewClass(object):
@@ -21,7 +24,7 @@ class ViewClass(object):
 
     def __init__(self, request):
         self.request = request
-        self.menu = qemutubes.widgets.MainMenu.req()
+        self.menu = qemutubes.widgets.MainMenu()
         self.popup = qemutubes.widgets.PopUp.req()
 
     def get_slice(self):
@@ -356,4 +359,33 @@ class VDEView(ViewClass):
         if retcode != 0:
             self.request.session.flash('Launch failed: '+output)
         return HTTPFound(location='/')
+
+class DBView(ViewClass):
+    
+    @view_config(route_name='db_import', renderer='upload.genshi')
+    def import_(self):
+        """ Import DB data from XML file. DB should be cleared of all but
+            *_types data first. """
+        #FIXME: Clear DB here? Also, this is thoroughly naive.
+        try:
+            fp = request.POST['upfile'].file
+        except KeyError:
+            return {'title': 'Import database XML'}
+        
+        exch = Exchange(Base.metadata)
+        exch.import_xml(fp)
+        exch.write_db()
+
+    @view_config(route_name='db_export')
+    def export(self):
+        exch = Exchange(Base.metadata)
+        fp = StringIO.StringIO()
+        exch.export_xml()
+        exch.write_xml(fp)
+        resp = Response()
+        resp.headerlist=[('Content-Type', 'text/html; charset=UTF-8'),]
+        resp.text=fp.getvalue()
+        resp.content_disposition = 'attachment; filename="qtubes_export.xml"'
+        resp.charset='utf-8'
+        return resp
 

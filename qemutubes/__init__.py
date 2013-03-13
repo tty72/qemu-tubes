@@ -29,7 +29,6 @@ def main(global_config, **settings):
     """
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
-    #FIXME: Does this break engines other than sqlite?
     Base.metadata.bind = engine
     config = Configurator(settings=settings, 
                           session_factory=qtubes_session_factory)

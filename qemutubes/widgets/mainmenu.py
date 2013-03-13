@@ -1,9 +1,12 @@
 from . import ddmenu
+from pyramid.request import Request
 
 class MainMenu(ddmenu.DDMenu):
     id = 'main_menu'
-    dbmenu = [{ 'label': 'Export', 'target': '#', },
-              { 'label': 'Import', 'target': '#', },
+    #FIXME: We should be generating URLs from route_url(), but I can't
+    # think of an elegant way to do so.
+    dbmenu = [{ 'label': 'Export', 'target': '/dbexport', },
+              { 'label': 'Import', 'target': '/dbimport', },
               ]
     toolsmenu = [{ 'label': 'DB', 'target': '#', 'attrs': {'class': 'qtpopup'},
                    'submenu': dbmenu, } 
