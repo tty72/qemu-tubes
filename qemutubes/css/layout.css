@@ -67,6 +67,7 @@ div#content {
     margin: 0px auto 0px auto;
     padding: 0px;
     height: auto;
+    display: block;
 }
 #header a {
     display: block;
