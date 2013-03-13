@@ -13,6 +13,7 @@
 
   <py:match path="body" once="true">
     <body py:attrs="select('@*')"><div id="wrap">
+	${view.popup.display()}
 	<div id="wrapper">
 	  <div id="header">
 	    <a href="/">
@@ -20,7 +21,6 @@
 	    </a>
 	  </div>
 	  <div id="menu">${view.menu.display()}</div>
-	  ${view.popup.display()}
 	  <div id="flash" py:if='request.session.peek_flash()'>
 	    <span py:replace="request.session.pop_flash()">OK</span>
 	  </div>
