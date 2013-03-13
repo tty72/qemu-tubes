@@ -362,23 +362,27 @@ class VDEView(ViewClass):
 
 class DBView(ViewClass):
     
-    @view_config(route_name='db_import', renderer='upload.genshi')
+    @view_config(route_name='db_import', renderer='templates/upload.genshi')
     def import_(self):
         """ Import DB data from XML file. DB should be cleared of all but
             *_types data first. """
         #FIXME: Clear DB here? Also, this is thoroughly naive.
         try:
-            fp = request.POST['upfile'].file
+            fp = self.request.POST['upfile'].file
         except KeyError:
-            return {'title': 'Import database XML'}
+            widget = qemutubes.widgets.DBImportForm(
+                action=self.request.route_url('db_import'))
+            return {'form': widget}
         
         exch = Exchange(Base.metadata)
         exch.import_xml(fp)
         exch.write_db()
+        return {}
 
     @view_config(route_name='db_export')
     def export(self):
-        exch = Exchange(Base.metadata)
+        exch = Exchange(Base.metadata, 
+                        ignlist=['cpu_types', 'machine_types', 'nic_types'])
         fp = StringIO.StringIO()
         exch.export_xml()
         exch.write_xml(fp)
