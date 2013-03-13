@@ -29,14 +29,14 @@ def main(global_config, **settings):
     """
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
-    #FIXME: Does this break engines other than sqlite?
     Base.metadata.bind = engine
     config = Configurator(settings=settings, 
                           session_factory=qtubes_session_factory)
     config.add_static_view('static', 'static', cache_max_age=3600)
     config.add_static_view('css', 'css', cache_max_age=3600)
-    #config.add_route('home', '/')
+    config.add_static_view('js', 'static/js', cache_max_age=3600)
     config.add_route('main', '/')
+    # Machine routes
     config.add_route('machine_grid', '/json/machinegrid')
     config.add_route('machine_edit', '/machineedit')
     config.add_route('machine_delete', '/machinedelete')
@@ -46,15 +46,21 @@ def main(global_config, **settings):
     config.add_route('machine_kill', '/machinekill')
     config.add_route('machine_powerdown', '/machinepowerdown')
     config.add_route('machine_vnc', '/machinevnc')
+    # Drive routes
     config.add_route('drive_grid', '/json/drivegrid')
     config.add_route('drive_edit', '/driveedit')
     config.add_route('drive_delete', '/drivedelete')
+    # Net routes
     config.add_route('net_grid', '/json/netgrid')
     config.add_route('net_edit', '/netedit')
     config.add_route('net_delete', '/netdelete')
+    # VDE routes
     config.add_route('vde_grid', '/json/vdegrid')
     config.add_route('vde_edit', '/vdeedit')
     config.add_route('vde_delete', '/vdedelete')
     config.add_route('switch_launch', '/switchlaunch')
+    # DB Routes
+    config.add_route('db_import', '/dbimport')
+    config.add_route('db_export', '/dbexport')
     config.scan()
     return config.make_wsgi_app()

@@ -1,3 +1,4 @@
+import StringIO
 from pyramid.response import Response
 from pyramid.view import view_config
 import qemutubes.widgets
@@ -10,6 +11,8 @@ from .models import (
     Drive,
     Net,
     VDE,
+    Exchange,
+    Base,
     )
 
 class ViewClass(object):
@@ -21,6 +24,8 @@ class ViewClass(object):
 
     def __init__(self, request):
         self.request = request
+        self.menu = qemutubes.widgets.MainMenu()
+        self.popup = qemutubes.widgets.PopUp.req()
 
     def get_slice(self):
         """ Determine slice, offset, sort order and column for grid from request
@@ -333,7 +338,7 @@ class VDEView(ViewClass):
                 return HTTPFound(location=url)
             except tw2.core.ValidationError, e:
                 widget = e.widget.req()
-        return {'form': widget}
+        return { 'form': widget }
 
     @view_config(route_name='vde_delete')
     def delete(self):
@@ -354,4 +359,37 @@ class VDEView(ViewClass):
         if retcode != 0:
             self.request.session.flash('Launch failed: '+output)
         return HTTPFound(location='/')
+
+class DBView(ViewClass):
+    
+    @view_config(route_name='db_import', renderer='templates/upload.genshi')
+    def import_(self):
+        """ Import DB data from XML file. DB should be cleared of all but
+            *_types data first. """
+        #FIXME: Clear DB here? Also, this is thoroughly naive.
+        try:
+            fp = self.request.POST['upfile'].file
+        except KeyError:
+            widget = qemutubes.widgets.DBImportForm(
+                action=self.request.route_url('db_import'))
+            return {'form': widget}
+        
+        exch = Exchange(Base.metadata)
+        exch.import_xml(fp)
+        exch.write_db()
+        return {}
+
+    @view_config(route_name='db_export')
+    def export(self):
+        exch = Exchange(Base.metadata, 
+                        ignlist=['cpu_types', 'machine_types', 'nic_types'])
+        fp = StringIO.StringIO()
+        exch.export_xml()
+        exch.write_xml(fp)
+        resp = Response()
+        resp.headerlist=[('Content-Type', 'text/html; charset=UTF-8'),]
+        resp.text=fp.getvalue()
+        resp.content_disposition = 'attachment; filename="qtubes_export.xml"'
+        resp.charset='utf-8'
+        return resp
 

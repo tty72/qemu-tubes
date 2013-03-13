@@ -6,6 +6,7 @@
   <head>
     <title>Machine List</title>
   </head>
+  <?python view.menu.active=['main', 'tools'] ?>
   <body class="submit">
     <div>
       ${machinegrid.display()}
