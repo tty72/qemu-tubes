@@ -348,7 +348,7 @@ class VDEView(ViewClass):
         VDE.query.filter(VDE.id==self.request.params['id']).delete()
         return Response("Ok")
 
-    @view_config(route_name='switch_launch') 
+    @view_config(route_name='vde_launch') 
     def launch(self):
         """ Launch switch
         Requires request.params['id'] points to a valid VDE id
@@ -358,6 +358,17 @@ class VDEView(ViewClass):
         (retcode, output) = v.launch()
         if retcode != 0:
             self.request.session.flash('Launch failed: '+output)
+        return HTTPFound(location='/')
+
+    @view_config(route_name='vde_kill') 
+    def kill(self):
+        """ Kill VDE instance
+        Requires request.params['id'] points to a valid VDE id
+        """
+        vid = self.request.params['id']
+        v = VDE.query.filter(VDE.id==vid).first()
+        v.kill()
+        self.request.session.flash('Killed: '+v.name)
         return HTTPFound(location='/')
 
 class DBView(ViewClass):

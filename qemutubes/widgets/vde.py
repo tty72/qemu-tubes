@@ -53,6 +53,14 @@ class VDEGrid(tw2.jqplugins.jqgrid.jqGridWidget):
             'title': 'Launch',
             'cursor': 'pointer'
         },
+        {
+            'caption': '',
+            'buttonicon': 'ui-icon-closethick',
+            'onClickButton': tw2.core.js_callback("KillVDE"),
+            'position': 'last',
+            'title': 'Kill VDE Switch',
+            'cursor': 'pointer'
+        },
         ]
     
     prmDel = {'url': '/vdedelete'}
@@ -61,8 +69,12 @@ class VDEGrid(tw2.jqplugins.jqgrid.jqGridWidget):
         super(VDEGrid, self).prepare()
         launchswitch = tw2.core.JSSource(location='head',
                                          src="""function LaunchSwitch() { var row=$('#%s').jqGrid('getGridParam', 'selrow');; 
-                                         window.location='/switchlaunch?id=' + row }""" %self.selector)
+                                         window.location='/vdelaunch?id=' + row }""" %self.selector)
+        killvde = tw2.core.JSSource(location='head',
+                                    src="""function KillVDE() { var row=$('#%s').jqGrid('getGridParam', 'selrow');; 
+                                         window.location='/vdekill?id=' + row }""" %self.selector)
         self.resources.append(launchswitch)
+        self.resources.append(killvde)
 
 class VDEForm(tw2.forms.TableForm, DBForm):
     entity = model.VDE

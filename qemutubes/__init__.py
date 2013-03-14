@@ -58,7 +58,9 @@ def main(global_config, **settings):
     config.add_route('vde_grid', '/json/vdegrid')
     config.add_route('vde_edit', '/vdeedit')
     config.add_route('vde_delete', '/vdedelete')
-    config.add_route('switch_launch', '/switchlaunch')
+    config.add_route('vde_launch', '/vdelaunch')
+    config.add_route('vde_kill', '/vdekill')
+    config.add_route('vde_powerdown', '/vdepowerdown')
     # DB Routes
     config.add_route('db_import', '/dbimport')
     config.add_route('db_export', '/dbexport')
