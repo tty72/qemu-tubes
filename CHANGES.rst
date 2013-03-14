@@ -1,3 +1,16 @@
+0.7
+---
+- Add DB import/export capability
+- Add main menu and supporting widget
+- Add pop-up window widget
+- Add QMP library from QEMU source
+- Remove colsole port field from machine instance. Automatically generate *nix socket
+  console interface for local use.
+- Expand control capability to allow starting, stopping and killing machine instances
+- Expand control capability to allow starting and killing VDE switch instances
+- Minor UI improvements
+- Code cleanup
+
 0.6
 ---
 - Don't display VNC link in machine view if machine is not running
