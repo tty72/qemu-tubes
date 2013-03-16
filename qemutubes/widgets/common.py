@@ -1,8 +1,16 @@
 import sqlalchemy as sa
 from tw2.sqla import utils as sautil
 
+def compliment(col, rem):
+    """ Return compliment of rem in col (Set difference)
+    col - list
+    rem - list
+    returns - list(col\rem)
+    """
+    return filter(lambda t: t not in rem, col)
+
 class DBForm(object):
-    """ Base mixin class for DB related form widgets
+    """ Base mix-in class for DB related form widgets
     Provides helper methods for fetching and storing data to a model
     """
     def fetch_data(self, req):

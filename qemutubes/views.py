@@ -219,7 +219,7 @@ class DriveView(ViewClass):
             if did:
                 widget.fetch_data(self.request)
             else:
-                widget.child.c.machine_id.value = mid
+                widget.children.machine_id.value = mid
         elif self.request.method == 'POST':
             # Assume post is an edit coming in. Validate and store it.
             try:

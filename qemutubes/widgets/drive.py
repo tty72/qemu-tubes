@@ -4,6 +4,7 @@ import tw2.sqla
 import tw2.jqplugins.jqgrid
 from .. import models as model
 from . import DBForm
+from .common import compliment as hide
 
 class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
     id = 'drive_grid'
@@ -51,13 +52,18 @@ class DriveGrid(tw2.jqplugins.jqgrid.jqGridWidget):
                                   src="""function GetDriveMac() { return $('#%s').jqGrid('getGridParam', 'userData'); }""" %self.selector)
         self.resources.append(edmac)
 
-class DriveForm(tw2.forms.TableForm, DBForm):
+class DriveForm(tw2.dynforms.HidingTableLayout, DBForm):
+    hover_help = True
     entity = model.Drive
     id = tw2.forms.HiddenField()
     machine_id = tw2.forms.HiddenField()
-    filepath = tw2.forms.TextField(validator=tw2.core.Required)
-    interface = tw2.forms.SingleSelectField(
-        options=model.DRIVE_IFS, value=model.DRIVE_IFS[0])
+    filepath = tw2.forms.TextField(validator=tw2.core.Required,
+                                   help_text='Path to drive image file')
+    interface = tw2.dynforms.HidingSingleSelectField(
+        options=model.DRIVE_IFS, value=model.DRIVE_IFS[0], 
+        mapping={'ide': ['ind', 'cyls', 'heads', 'secs', 'trans', 'media'],
+                 'scsi': ['bus', 'unit', 'cyls', 'heads', 'secs', 'trans', 'media'],
+                 'floppy': ['ind', 'cyls', 'heads', 'secs', 'trans'],})
     media = tw2.forms.SingleSelectField(options=model.MEDIA, 
                                         value=model.MEDIA[0],
                                         validator=tw2.core.Required)
@@ -77,3 +83,11 @@ class DriveForm(tw2.forms.TableForm, DBForm):
     ser = tw2.forms.TextField()
     action = '/driveedit'
 
+#    def prepare(self):
+#        self.children.interface.mapping = {'ide': 
+#                                           hide([x.id for x in self.children],
+#                                                ['bus', 'unit'])}
+#        self.children.interface.mapping = {'ide': ['unit', 'ser']}
+#        print "#$#$#$#$#$#$$#$#$#$"
+#        print self.children.interface.mapping
+#        super(DriveForm, self).prepare()
