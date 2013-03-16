@@ -26,6 +26,30 @@ class ViewClass(object):
         self.request = request
         self.menu = qemutubes.widgets.MainMenu()
         self.popup = qemutubes.widgets.PopUp.req()
+        self.menu.menu = self.menu_data # Beetlejuice Beetlejuice Beetlejuice
+
+    @property
+    def menu_data(self):
+        """ Populate all the main menu options """
+        try:
+            return self._mainmenu
+        except AttributeError:
+            dbmenu = [{ 'label': 'Export', 
+                        'target': self.request.route_path('db_export'), },
+                      { 'label': 'Import', 
+                        'target': self.request.route_path('db_import'), 
+                        'attrs': {'class': 'qtpopup'}},
+                      ]
+            toolsmenu = [{ 'label': 'DB', 'target': '#',
+                           'submenu': dbmenu, } 
+                         ]
+            self._mainmenu = { 'main': { 'label': 'Main', 
+                                         'target': 
+                                         self.request.route_path('main') },
+                               'tools': { 'label': 'Tools', 'target': '#',
+                                          'submenu': toolsmenu, }
+                               }
+            return self._mainmenu
 
     def get_slice(self):
         """ Determine slice, offset, sort order and column for grid from request
